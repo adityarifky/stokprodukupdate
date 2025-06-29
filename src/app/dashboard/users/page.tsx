@@ -166,7 +166,7 @@ export default function UsersStatusPage() {
                                   onClick={() => setChattingWith(user)}
                                   disabled={isCurrentUser}
                               >
-                                  Curhat
+                                  Chat!
                               </Button>
                           </TableCell>
                         </TableRow>

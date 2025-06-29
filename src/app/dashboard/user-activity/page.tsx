@@ -30,6 +30,12 @@ interface Activity {
     avatar: string;
 }
 
+interface UserData {
+    name: string;
+    position: string;
+    avatar: string;
+}
+
 export default function UserActivityPage() {
   const [userActivity, setUserActivity] = useState<Activity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,18 +48,33 @@ export default function UserActivityPage() {
           };
           
           try {
-              const activityQuery = query(collection(db, "user-activity"), orderBy("loginTime", "desc"));
-              const querySnapshot = await getDocs(activityQuery);
-              const activities = querySnapshot.docs.map(doc => {
+              const usersQuery = query(collection(db, "users"));
+              const usersSnapshot = await getDocs(usersQuery);
+              const usersMap = new Map<string, UserData>();
+              usersSnapshot.forEach(doc => {
                   const data = doc.data();
-                  const loginTime = data.loginTime as Timestamp;
-                  return {
-                      id: doc.id,
+                  usersMap.set(doc.id, {
                       name: data.name || 'N/A',
                       position: data.position || 'N/A',
+                      avatar: data.avatarUrl || '',
+                  });
+              });
+
+              const activityQuery = query(collection(db, "user-activity"), orderBy("loginTime", "desc"));
+              const activitySnapshot = await getDocs(activityQuery);
+              
+              const activities = activitySnapshot.docs.map(doc => {
+                  const data = doc.data();
+                  const loginTime = data.loginTime as Timestamp;
+                  const userDetails = usersMap.get(data.userId) || { name: data.name || 'Pengguna Tidak Dikenal', position: data.position || 'N/A', avatar: data.avatar || '' };
+
+                  return {
+                      id: doc.id,
+                      name: userDetails.name,
+                      position: userDetails.position,
                       loginTime: loginTime ? new Date(loginTime.seconds * 1000).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' }) : 'N/A',
                       ip: data.ip || 'N/A',
-                      avatar: data.avatar || '',
+                      avatar: userDetails.avatar,
                   };
               });
               setUserActivity(activities);

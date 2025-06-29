@@ -6,7 +6,7 @@ import { Home, Package, BarChart2, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/dashboard", label: "Dasbor", icon: Home },
+  { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "#", label: "Produk", icon: Package },
   { href: "#", label: "Laporan", icon: BarChart2 },
   { href: "#", label: "Pengaturan", icon: Settings },

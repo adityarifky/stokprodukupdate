@@ -38,9 +38,9 @@ export function DashboardSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <Link href="/dashboard" passHref>
-              <SidebarMenuButton tooltip="Dasbor" isActive={pathname === '/dashboard'}>
+              <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/dashboard'}>
                 <Home />
-                <span>Dasbor</span>
+                <span>Dashboard</span>
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>

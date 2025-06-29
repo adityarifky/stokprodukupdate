@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from 'next/link';
 import { motion, AnimatePresence } from "framer-motion";
 import Cropper, { type Area } from 'react-easy-crop';
 import { LogOut, User } from "lucide-react";
@@ -29,6 +28,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import getCroppedImg from "@/lib/image-utils";
+import { useRouter } from "next/navigation";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 const greetings = [
   "Halo Bro! 👋",
@@ -41,6 +43,7 @@ const greetings = [
 ];
 
 export function UserNav() {
+  const router = useRouter();
   const [name, setName] = React.useState("");
   const [position, setPosition] = React.useState("");
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
@@ -71,8 +74,10 @@ export function UserNav() {
   React.useEffect(() => {
     const storedName = localStorage.getItem("userName");
     const storedPosition = localStorage.getItem("userPosition");
+    const storedAvatar = localStorage.getItem("avatarUrl");
     if (storedName) setName(storedName);
     if (storedPosition) setPosition(storedPosition);
+    if (storedAvatar) setAvatarUrl(storedAvatar);
     selectRandomGreeting();
   }, [selectRandomGreeting]);
 
@@ -88,6 +93,7 @@ export function UserNav() {
   const handleProfileSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     setAvatarUrl(tempAvatarUrl);
+    localStorage.setItem('avatarUrl', tempAvatarUrl);
     selectRandomGreeting();
     setIsDialogOpen(false);
   };
@@ -137,6 +143,19 @@ export function UserNav() {
     }
     setIsCropperOpen(false);
   }, [imageToCrop, croppedAreaPixels, rotation]);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userPosition');
+      localStorage.removeItem('profileSetupComplete');
+      localStorage.removeItem('avatarUrl');
+      router.push('/');
+    } catch (error) {
+      console.error("Gagal keluar:", error);
+    }
+  };
 
 
   return (
@@ -189,12 +208,10 @@ export function UserNav() {
               </DialogTrigger>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <Link href="/" passHref>
-              <DropdownMenuItem>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Keluar</span>
-              </DropdownMenuItem>
-            </Link>
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Keluar</span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <DialogContent className="sm:max-w-[425px]">

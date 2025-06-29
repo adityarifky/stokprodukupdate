@@ -95,7 +95,7 @@ export default function DashboardPage() {
                   </p>
                 </CardContent>
                 <motion.div
-                    className="absolute bottom-4 right-4 text-xs text-muted-foreground"
+                    className="absolute bottom-4 right-4 text-xs"
                     animate={{ opacity: [0.3, 1, 0.3] }}
                     transition={{
                         duration: 2.5,

@@ -1,6 +1,8 @@
+
 'use client';
 
 import { useEffect, useState } from "react";
+import type { DateRange } from "react-day-picker";
 import {
   Card,
   CardContent,
@@ -27,6 +29,7 @@ import { format, startOfDay, endOfDay } from "date-fns";
 import { id } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { CSVLink } from "react-csv";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ReportData {
     productName: string;
@@ -38,7 +41,8 @@ interface ReportData {
 export default function ReportsPage() {
     const [reportData, setReportData] = useState<ReportData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [date, setDate] = useState<Date | undefined>(new Date());
+    const [date, setDate] = useState<Date | DateRange | undefined>(new Date());
+    const [filterType, setFilterType] = useState<'daily' | 'range'>('daily');
 
     useEffect(() => {
         const fetchReportData = async () => {
@@ -49,8 +53,19 @@ export default function ReportsPage() {
             }
             setIsLoading(true);
 
-            const fromDate = startOfDay(date);
-            const toDate = endOfDay(date);
+            let fromDate, toDate;
+
+            if (date instanceof Date) { // Single day
+                fromDate = startOfDay(date);
+                toDate = endOfDay(date);
+            } else if (date?.from) { // Date range
+                fromDate = startOfDay(date.from);
+                toDate = date.to ? endOfDay(date.to) : endOfDay(date.from);
+            } else {
+                 setReportData([]);
+                 setIsLoading(false);
+                 return;
+            }
             
             const q = query(
                 collection(db, "stock_history"),
@@ -91,7 +106,19 @@ export default function ReportsPage() {
         fetchReportData();
     }, [date]);
 
-    const handleDateSelect = (selectedDate: Date | undefined) => {
+    const handleFilterChange = (value: 'daily' | 'range') => {
+        setFilterType(value);
+        if (value === 'daily') {
+            setDate(new Date());
+        } else {
+            setDate({
+                from: new Date(),
+                to: new Date()
+            });
+        }
+    };
+    
+    const handleDateSelect = (selectedDate: Date | DateRange | undefined) => {
         setDate(selectedDate);
     };
     
@@ -103,10 +130,25 @@ export default function ReportsPage() {
     ];
 
     const getCsvFilename = () => {
-        if (!date) return "laporan-stok-harian.csv";
-        const formattedDate = format(date, "yyyy-MM-dd");
-        return `laporan-stok-harian_${formattedDate}.csv`;
+        if (!date) return "laporan-stok.csv";
+
+        if (date instanceof Date) {
+            const formattedDate = format(date, "yyyy-MM-dd");
+            return `laporan-stok-harian_${formattedDate}.csv`;
+        }
+
+        if (date.from) {
+            const from = format(date.from, "yyyy-MM-dd");
+            if (date.to && format(date.from, 'yyyy-MM-dd') !== format(date.to, 'yyyy-MM-dd')) {
+                const to = format(date.to, "yyyy-MM-dd");
+                return `laporan-stok_${from}_sampai_${to}.csv`;
+            }
+            return `laporan-stok-harian_${from}.csv`;
+        }
+
+        return "laporan-stok.csv";
     };
+
 
     return (
         <main className="p-4 sm:px-6 md:p-8">
@@ -116,13 +158,22 @@ export default function ReportsPage() {
                         <div className="flex-1">
                             <div className="flex items-center gap-2">
                                 <FileText className="h-6 w-6" />
-                                <CardTitle>Laporan Stok Harian</CardTitle>
+                                <CardTitle>Laporan Stok</CardTitle>
                             </div>
                             <CardDescription>
-                                Analisis penambahan dan pengurangan stok produk untuk tanggal yang dipilih.
+                                Analisis penambahan dan pengurangan stok produk untuk periode yang dipilih.
                             </CardDescription>
                         </div>
                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                            <Select value={filterType} onValueChange={handleFilterChange as (value: string) => void}>
+                                <SelectTrigger className="w-full sm:w-[180px]">
+                                    <SelectValue placeholder="Pilih Tipe Laporan" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="daily">Laporan Harian</SelectItem>
+                                    <SelectItem value="range">Rentang Kustom</SelectItem>
+                                </SelectContent>
+                            </Select>
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <Button
@@ -135,7 +186,19 @@ export default function ReportsPage() {
                                     >
                                         <CalendarIcon className="mr-2 h-4 w-4" />
                                         {date ? (
-                                            format(date, "d LLL y", { locale: id })
+                                            filterType === 'daily' && date instanceof Date ? (
+                                                format(date, "d LLL y", { locale: id })
+                                            ) : filterType === 'range' && !(date instanceof Date) && date?.from ? (
+                                                date.to ? (
+                                                    <>
+                                                        {format(date.from, "d LLL y", { locale: id })} - {format(date.to, "d LLL y", { locale: id })}
+                                                    </>
+                                                ) : (
+                                                    format(date.from, "d LLL y", { locale: id })
+                                                )
+                                            ) : (
+                                                <span>Pilih tanggal</span>
+                                            )
                                         ) : (
                                             <span>Pilih tanggal</span>
                                         )}
@@ -144,10 +207,11 @@ export default function ReportsPage() {
                                 <PopoverContent className="w-auto p-0" align="end">
                                     <Calendar
                                         initialFocus
-                                        mode="single"
-                                        selected={date}
+                                        mode={filterType}
+                                        selected={date as any}
                                         onSelect={handleDateSelect}
                                         locale={id}
+                                        numberOfMonths={filterType === 'range' ? 2 : 1}
                                     />
                                 </PopoverContent>
                             </Popover>
@@ -220,7 +284,7 @@ export default function ReportsPage() {
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={4} className="h-24 text-center">
-                                        Tidak ada data aktivitas untuk tanggal yang dipilih.
+                                        Tidak ada data aktivitas untuk periode yang dipilih.
                                     </TableCell>
                                 </TableRow>
                             )}

@@ -38,6 +38,7 @@ interface User {
   position: string;
   status: 'Online' | 'Offline';
   avatar: string;
+  story: string;
 }
 
 export default function UsersStatusPage() {
@@ -65,6 +66,7 @@ export default function UsersStatusPage() {
                 position: data.position || 'N/A',
                 status: data.status === 'online' ? 'Online' : 'Offline',
                 avatar: data.avatarUrl || '',
+                story: data.story || '',
             });
         });
         setUsers(usersData);
@@ -147,6 +149,11 @@ export default function UsersStatusPage() {
                                 <div className="flex flex-col">
                                     <div className="font-medium">{user.name}</div>
                                     <div className="text-sm text-muted-foreground">{user.position}</div>
+                                    {user.story && (
+                                      <p className="text-xs text-muted-foreground italic pt-1 truncate max-w-xs">
+                                          “{user.story}”
+                                      </p>
+                                    )}
                                 </div>
                             </div>
                           </TableCell>

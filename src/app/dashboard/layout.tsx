@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, onSnapshot, type Unsubscribe } from "firebase/firestore";
 
 export default function DashboardLayout({
   children,
@@ -31,16 +31,54 @@ export default function DashboardLayout({
   };
 
   useEffect(() => {
+    // Initial load from local storage to prevent flicker on page refresh.
     handleProfileUpdate();
-  }, []);
+
+    let unsubscribe: Unsubscribe | undefined;
+
+    // The auth state is already handled by ProfileSetupGuard,
+    // so we can assume auth.currentUser is available.
+    if (auth.currentUser && db) {
+      const userRef = doc(db, 'users', auth.currentUser.uid);
+      unsubscribe = onSnapshot(userRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          const newName = userData.name || "";
+          const newPosition = userData.position || "";
+          const newStory = userData.story || "";
+          const newAvatar = userData.avatarUrl || "";
+
+          // Update state to re-render the UI with the latest data
+          setUserName(newName);
+          setUserPosition(newPosition);
+          setUserStory(newStory);
+          setAvatarUrl(newAvatar);
+
+          // Also update localStorage to keep it in sync for the next initial load.
+          localStorage.setItem('userName', newName);
+          localStorage.setItem('userPosition', newPosition);
+          localStorage.setItem('userStory', newStory);
+          localStorage.setItem('avatarUrl', newAvatar);
+        }
+      });
+    }
+
+    // Cleanup the listener when the component unmounts.
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, []); // Empty dependency array ensures this runs only once on mount.
   
   const onProfileUpdate = () => {
-    handleProfileUpdate();
     const newAvatarUrl = localStorage.getItem("avatarUrl") || "";
     const newStory = localStorage.getItem("userStory") || "";
     
     if(auth.currentUser && db) {
         const userRef = doc(db, 'users', auth.currentUser.uid);
+        // This update will be picked up by the onSnapshot listener,
+        // which will then update the state and UI automatically.
         updateDoc(userRef, { 
           avatarUrl: newAvatarUrl,
           story: newStory,

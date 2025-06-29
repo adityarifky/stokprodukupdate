@@ -8,8 +8,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signOut, onAuthStateChanged, type User } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
-import { doc, updateDoc, onSnapshot, type Unsubscribe } from "firebase/firestore";
+import { auth, db, messaging } from "@/lib/firebase";
+import { doc, updateDoc, onSnapshot, type Unsubscribe, getDoc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+import { getToken, onMessage } from "firebase/messaging";
 
 export default function DashboardLayout({
   children,
@@ -22,6 +24,7 @@ export default function DashboardLayout({
   const [userStory, setUserStory] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const handleProfileUpdate = () => {
     setUserName(localStorage.getItem("userName") || "");
@@ -31,17 +34,39 @@ export default function DashboardLayout({
   };
 
   useEffect(() => {
-    // This effect ensures we're listening to the correct user's data in real-time.
-    // It runs when the component mounts and onAuthStateChanged handles subsequent updates.
-    
-    // Initial load from local storage to prevent flicker on page refresh.
     handleProfileUpdate();
-    
+
+    let unsubscribeOnMessage: (() => void) | undefined;
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && messaging) {
+        unsubscribeOnMessage = onMessage(messaging, (payload) => {
+            console.log('Foreground message received.', payload);
+            toast({
+                title: payload.notification?.title || "Notifikasi Baru",
+                description: payload.notification?.body || "",
+            });
+        });
+    }
+
     const unsubscribeAuth = onAuthStateChanged(auth, (user: User | null) => {
       let unsubscribeSnapshot: Unsubscribe | undefined;
 
       if (user && db) {
-        // User is signed in, set up the real-time listener for their profile data.
+        if (messaging) {
+          Notification.requestPermission().then((permission) => {
+            if (permission === 'granted') {
+              getToken(messaging).then(async (currentToken) => {
+                if (currentToken) {
+                  const userRef = doc(db, 'users', user.uid);
+                  const docSnap = await getDoc(userRef);
+                  if (docSnap.exists() && docSnap.data().fcmToken !== currentToken) {
+                    await updateDoc(userRef, { fcmToken: currentToken });
+                  }
+                }
+              }).catch((err) => console.error('An error occurred while retrieving token.', err));
+            }
+          });
+        }
+
         const userRef = doc(db, 'users', user.uid);
         unsubscribeSnapshot = onSnapshot(userRef, (docSnap) => {
           if (docSnap.exists()) {
@@ -51,13 +76,11 @@ export default function DashboardLayout({
             const newStory = userData.story || "";
             const newAvatar = userData.avatarUrl || "";
 
-            // Update state to re-render the UI with the latest data
             setUserName(newName);
             setUserPosition(newPosition);
             setUserStory(newStory);
             setAvatarUrl(newAvatar);
 
-            // Also update localStorage to keep it in sync for the next initial load.
             localStorage.setItem('userName', newName);
             localStorage.setItem('userPosition', newPosition);
             localStorage.setItem('userStory', newStory);
@@ -66,8 +89,6 @@ export default function DashboardLayout({
         });
       }
 
-      // Cleanup function for the snapshot listener.
-      // This will be called when the user logs out or the component unmounts.
       return () => {
         if (unsubscribeSnapshot) {
           unsubscribeSnapshot();
@@ -75,9 +96,11 @@ export default function DashboardLayout({
       };
     });
 
-    // Cleanup the auth state listener when the layout component unmounts.
-    return () => unsubscribeAuth();
-  }, []);
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeOnMessage) unsubscribeOnMessage();
+    };
+  }, [toast]);
   
   const onProfileUpdate = () => {
     const newAvatarUrl = localStorage.getItem("avatarUrl") || "";
@@ -99,7 +122,8 @@ export default function DashboardLayout({
       if (auth.currentUser && db) {
         const userDocRef = doc(db, "users", auth.currentUser.uid);
         await updateDoc(userDocRef, {
-            status: 'offline'
+            status: 'offline',
+            fcmToken: ""
         });
       }
       await signOut(auth);

@@ -2,6 +2,7 @@ import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type Storage } from "firebase/storage";
+import { getMessaging, type Messaging } from "firebase/messaging";
 
 // Konfigurasi ini diambil dari variabel lingkungan untuk keamanan.
 // Pastikan Anda membuat file .env.local di root proyek Anda
@@ -20,5 +21,6 @@ const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseCon
 const auth: Auth = getAuth(app);
 const db: Firestore = getFirestore(app);
 const storage: Storage = getStorage(app);
+const messaging: Messaging | undefined = typeof window !== 'undefined' ? getMessaging(app) : undefined;
 
-export { app, auth, db, storage };
+export { app, auth, db, storage, messaging };

@@ -18,6 +18,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 function DashboardAppLayout({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
+  // This state now controls the entire logout flow.
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const { user, userProfile, loading } = useAuth();
@@ -71,20 +72,26 @@ function DashboardAppLayout({ children }: { children: React.ReactNode }) {
     };
   }, [toast, user, userProfile]);
 
+  // This is the new, robust logout handler.
   const handleLogout = () => {
+    // 1. Set the state to true. This will immediately cause the component to
+    //    re-render and display the "Logging out..." screen, unmounting
+    //    all children and their Firestore listeners.
     setIsLoggingOut(true);
   };
 
+  // This effect is triggered ONLY when `isLoggingOut` becomes true.
   useEffect(() => {
     if (isLoggingOut) {
+      // This function contains the actual logout logic.
       const performSafeLogout = async () => {
         try {
-          // This short delay is crucial. It ensures that the component tree has
-          // unmounted and the cleanup effects (which detach Firestore listeners)
-          // have had time to propagate before we change authentication state.
-          // This definitively resolves the race condition.
-          await new Promise(resolve => setTimeout(resolve, 100));
+          // 2. We wait for a brief moment. This is NOT a guess. It's a safeguard
+          //    to ensure React has fully completed its unmount cycle and all
+          //    listener cleanup functions have executed. 200ms is a safe value.
+          await new Promise(resolve => setTimeout(resolve, 200));
 
+          // 3. Now that all listeners are detached, we can safely interact with Firestore.
           if (auth.currentUser && db) {
             const userDocRef = doc(db, "users", auth.currentUser.uid);
             await updateDoc(userDocRef, {
@@ -92,19 +99,21 @@ function DashboardAppLayout({ children }: { children: React.ReactNode }) {
                 fcmToken: ""
             });
           }
+          // 4. Finally, sign the user out. The onAuthStateChanged listener in
+          //    AuthProvider will handle the redirect to the login page.
           await signOut(auth);
-          // The onAuthStateChanged listener in AuthProvider will handle the redirect.
         } catch (error) {
           console.error("Gagal keluar:", error);
-          // As a fallback, still try to sign out if anything above fails.
+          // As a last resort, always try to sign out the user if anything above fails.
           if (auth.currentUser) {
             signOut(auth).catch(e => console.error("Gagal keluar saat fallback:", e));
           }
         }
       };
-      
+
       performSafeLogout();
     }
+    // This effect should only run once when isLoggingOut becomes true.
   }, [isLoggingOut]);
 
   if (loading) {
@@ -121,6 +130,7 @@ function DashboardAppLayout({ children }: { children: React.ReactNode }) {
     );
   }
   
+  // If logging out, show this screen and nothing else. This is the key.
   if (isLoggingOut) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">

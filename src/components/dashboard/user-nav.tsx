@@ -44,11 +44,19 @@ export function UserNav() {
   const [greeting, setGreeting] = React.useState("");
 
   const selectRandomGreeting = React.useCallback(() => {
-    setGreeting(greetings[Math.floor(Math.random() * greetings.length)]);
+    setGreeting((currentGreeting) => {
+      let newGreeting;
+      do {
+        newGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+      } while (newGreeting === currentGreeting);
+      return newGreeting;
+    });
   }, []);
 
   React.useEffect(() => {
     selectRandomGreeting();
+    const intervalId = setInterval(selectRandomGreeting, 3000);
+    return () => clearInterval(intervalId);
   }, [selectRandomGreeting]);
 
   const handleProfileSubmit = (event: React.FormEvent) => {

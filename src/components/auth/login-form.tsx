@@ -55,7 +55,7 @@ export function LoginForm() {
 
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
-      router.push("/profile-setup");
+      router.push("/dashboard");
     } catch (error: any) {
       let errorMessage = "Terjadi kesalahan saat masuk.";
       switch (error.code) {

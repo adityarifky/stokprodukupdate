@@ -71,7 +71,7 @@ export default function UserActivityPage() {
     <main className="p-4 sm:px-6 md:p-8">
       <Card>
         <CardHeader>
-          <CardTitle>Log Aktivitas</CardTitle>
+          <CardTitle>Aktivitas Login</CardTitle>
           <CardDescription>
             Lacak siapa saja yang login dan kapan mereka masuk ke sistem.
           </CardDescription>

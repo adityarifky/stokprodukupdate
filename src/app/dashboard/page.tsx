@@ -10,7 +10,7 @@ import {
 import { Overview } from "@/components/dashboard/overview";
 import { LatestAnnouncements } from "@/components/dashboard/latest-announcements";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query, DocumentData } from "firebase/firestore";
+import { collection, onSnapshot, query, DocumentData, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Utensils, Cake, Layers, CupSoda, Package, ShoppingBasket, Megaphone } from "lucide-react";
@@ -30,9 +30,16 @@ interface StockData {
     [key: string]: number;
 }
 
+interface StockChartData {
+  name: string;
+  subtracted: number;
+}
+
 export default function DashboardPage() {
     const [stockData, setStockData] = useState<StockData | null>(null);
+    const [stockChartData, setStockChartData] = useState<StockChartData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isLoadingChart, setIsLoadingChart] = useState(true);
     const [currentDate, setCurrentDate] = useState<string>('');
 
     useEffect(() => {
@@ -68,6 +75,42 @@ export default function DashboardPage() {
         }, (error) => {
             console.error("Error fetching product data:", error);
             setIsLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        if (!db) {
+            setIsLoadingChart(false);
+            return;
+        }
+
+        const q = query(
+            collection(db, "stock_history"),
+            where("operation", "==", "subtract")
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const subtractedData: { [productName: string]: number } = {};
+
+            snapshot.forEach(doc => {
+                const activity = doc.data();
+                if (activity.productName) {
+                    subtractedData[activity.productName] = (subtractedData[activity.productName] || 0) + (activity.quantity || 0);
+                }
+            });
+
+            const formattedChartData = Object.entries(subtractedData)
+                .map(([name, subtracted]) => ({ name, subtracted }))
+                .sort((a, b) => b.subtracted - a.subtracted)
+                .slice(0, 7);
+
+            setStockChartData(formattedChartData);
+            setIsLoadingChart(false);
+        }, (error) => {
+            console.error("Error fetching stock history for chart:", error);
+            setIsLoadingChart(false);
         });
 
         return () => unsubscribe();
@@ -135,13 +178,19 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Penjualan Mingguan</CardTitle>
+            <CardTitle className="font-headline">Ringkasan Grafik Stok</CardTitle>
              <CardDescription>
-              Ringkasan kinerja penjualan Anda minggu ini.
+              Grafik 7 produk teratas yang stoknya paling sering berkurang.
             </CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
-            <Overview />
+            {isLoadingChart ? (
+                <div className="flex justify-center items-center min-h-[240px]">
+                    <Skeleton className="h-full w-full" />
+                </div>
+            ) : (
+                <Overview data={stockChartData} />
+            )}
           </CardContent>
         </Card>
       </div>

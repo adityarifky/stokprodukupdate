@@ -1,54 +1,56 @@
 
 "use client"
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from "recharts"
 
 import {
   ChartConfig,
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
 
-const chartData = [
-  { day: "Sen", sales: 1230 },
-  { day: "Sel", sales: 1543 },
-  { day: "Rab", sales: 980 },
-  { day: "Kam", sales: 2150 },
-  { day: "Jum", sales: 1765 },
-  { day: "Sab", sales: 2540 },
-  { day: "Min", sales: 2310 },
-];
-
 const chartConfig = {
-  sales: {
-    label: "Penjualan",
-    color: "hsl(var(--primary))",
+  subtracted: {
+    label: "Stok Keluar",
+    color: "hsl(var(--chart-1))",
   },
 } satisfies ChartConfig
 
-export function Overview() {
+export function Overview({ data }: { data: any[] }) {
+  if (!data || data.length === 0) {
+    return (
+        <div className="flex h-[240px] w-full items-center justify-center text-center text-sm text-muted-foreground">
+            Tidak ada data pengurangan stok untuk ditampilkan.
+        </div>
+    )
+  }
+
   return (
     <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-      <BarChart accessibilityLayer data={chartData}>
+      <BarChart accessibilityLayer data={data} margin={{ top: 20 }}>
         <CartesianGrid vertical={false} />
         <XAxis
-          dataKey="day"
+          dataKey="name"
           tickLine={false}
           tickMargin={10}
           axisLine={false}
+          tickFormatter={(value) => value.length > 10 ? `${value.slice(0, 10)}...` : value}
         />
         <YAxis
             tickLine={false}
             axisLine={false}
             tickMargin={10}
-            tickFormatter={(value) => `$${value / 1000}k`}
+            allowDecimals={false}
         />
         <ChartTooltip
           cursor={false}
-          content={<ChartTooltipContent hideLabel />}
+          content={<ChartTooltipContent />}
         />
-        <Bar dataKey="sales" fill="var(--color-sales)" radius={8} />
+        <Legend content={<ChartLegendContent />} />
+        <Bar dataKey="subtracted" fill="var(--color-subtracted)" radius={8} />
       </BarChart>
     </ChartContainer>
   )

@@ -8,6 +8,7 @@ import { BellRing } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
+import { AnnouncementReplies } from './announcement-replies';
 
 interface Announcement {
     id: string;
@@ -97,6 +98,7 @@ export function LatestAnnouncements() {
                             <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap p-4 border bg-background rounded-lg shadow-inner">
                                 {announcement.content}
                             </div>
+                            <AnnouncementReplies announcementId={announcement.id} />
                         </div>
                    </React.Fragment>
                 ))}

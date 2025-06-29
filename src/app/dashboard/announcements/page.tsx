@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { AnnouncementFormDialog } from '@/components/dashboard/announcement-form-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { AnnouncementReplies } from '@/components/dashboard/announcement-replies';
 
 interface Announcement {
     id: string;
@@ -178,6 +179,7 @@ export default function AnnouncementsPage() {
                                                 <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap p-4 border bg-background rounded-lg shadow-inner">
                                                     {announcement.content}
                                                 </div>
+                                                <AnnouncementReplies announcementId={announcement.id} />
                                             </div>
                                         </AccordionContent>
                                     </AccordionItem>

@@ -264,7 +264,7 @@ export function UpdateStockForm() {
                     name="operation"
                     render={({ field }) => (
                         <FormItem className="space-y-3">
-                            <FormLabel>Jenis Operasi</FormLabel>
+                            <FormLabel>Tambah Stok Atau Kurangin Stok?</FormLabel>
                             <FormControl>
                                 <RadioGroup
                                     onValueChange={field.onChange}

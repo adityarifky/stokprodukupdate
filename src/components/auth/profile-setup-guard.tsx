@@ -61,7 +61,7 @@ export function ProfileSetupGuard({ children }: { children: React.ReactNode }) {
                 </div>
             </div>
             
-            <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm">
                 <ProfileSetupForm onComplete={handleProfileSetupComplete} />
             </div>
         </>

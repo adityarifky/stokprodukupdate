@@ -47,10 +47,10 @@ export default function DashboardPage() {
             }, {} as StockData);
 
             snapshot.forEach(doc => {
-                const product = doc.data() as DocumentData;
+                const product = doc.data() as { category: string; stock: number };
                 const categoryName = product.category;
                 if (categoryName && counts.hasOwnProperty(categoryName)) {
-                    counts[categoryName]++;
+                    counts[categoryName] += product.stock || 0;
                 }
             });
             
@@ -84,7 +84,7 @@ export default function DashboardPage() {
               <CardContent>
                 {renderStockCount(category.name)}
                 <p className="text-xs text-muted-foreground">
-                    Total jenis produk.
+                    Total stok tersedia.
                 </p>
               </CardContent>
             </Card>

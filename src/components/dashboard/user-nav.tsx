@@ -26,10 +26,26 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+const greetings = [
+  "Halo Bro! 👋",
+  "Gimana Kabarmu? 😊",
+  "Semangat Yaaa! 🔥",
+  "Ojo Lemes Lee 💪",
+  "Tetap Waspada! 👀",
+  "Hai Ganteng! 😎",
+  "Hai Cantik! 😉",
+];
+
 export function UserNav() {
   const [name, setName] = React.useState("Sweet Delights");
   const [tempName, setTempName] = React.useState(name);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [greeting, setGreeting] = React.useState("");
+
+  React.useEffect(() => {
+    // Pilih sapaan acak saat komponen dimuat di sisi klien
+    setGreeting(greetings[Math.floor(Math.random() * greetings.length)]);
+  }, []);
 
   const handleProfileSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -63,7 +79,7 @@ export function UserNav() {
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">{name}</p>
               <p className="text-xs leading-none text-muted-foreground">
-                owner@desserts.com
+                {greeting}
               </p>
             </div>
           </DropdownMenuLabel>

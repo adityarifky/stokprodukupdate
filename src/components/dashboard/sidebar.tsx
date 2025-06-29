@@ -45,8 +45,8 @@ export function DashboardSidebar() {
             </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <Link href="#" passHref>
-              <SidebarMenuButton tooltip="Produk">
+            <Link href="/dashboard/products" passHref>
+              <SidebarMenuButton tooltip="Produk" isActive={pathname.startsWith('/dashboard/products')}>
                 <Package />
                 <span>Produk</span>
               </SidebarMenuButton>

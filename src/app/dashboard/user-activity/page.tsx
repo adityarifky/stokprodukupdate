@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from "react";
@@ -17,8 +18,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { db } from "@/lib/firebase";
-import { collection, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
+import { collection, getDocs, query, orderBy, Timestamp, doc, getDoc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShieldAlert } from "lucide-react";
 
@@ -40,65 +41,108 @@ interface UserData {
 export default function UserActivityPage() {
   const [userActivity, setUserActivity] = useState<Activity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [userPosition, setUserPosition] = useState<string | null>(null);
+  const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
 
   useEffect(() => {
-      const position = localStorage.getItem("userPosition");
-      setUserPosition(position);
+    const checkPermissionsAndFetch = async () => {
+        if (!auth.currentUser || !db) {
+            setIsLoading(false);
+            setIsAllowed(false);
+            return;
+        }
 
-      if (position !== 'Management') {
-          setIsLoading(false);
-          return;
-      }
+        try {
+            const userRef = doc(db, 'users', auth.currentUser.uid);
+            const userSnap = await getDoc(userRef);
 
-      const fetchActivity = async () => {
-          if (!db) {
-              setIsLoading(false);
-              return;
-          };
-          
-          try {
-              const usersQuery = query(collection(db, "users"));
-              const usersSnapshot = await getDocs(usersQuery);
-              const usersMap = new Map<string, UserData>();
-              usersSnapshot.forEach(doc => {
-                  const data = doc.data();
-                  usersMap.set(doc.id, {
-                      name: data.name || 'N/A',
-                      position: data.position || 'N/A',
-                      avatar: data.avatarUrl || '',
-                  });
-              });
+            if (userSnap.exists() && userSnap.data().position === 'Management') {
+                setIsAllowed(true);
+                
+                const usersQuery = query(collection(db, "users"));
+                const usersSnapshot = await getDocs(usersQuery);
+                const usersMap = new Map<string, UserData>();
+                usersSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    usersMap.set(doc.id, {
+                        name: data.name || 'N/A',
+                        position: data.position || 'N/A',
+                        avatar: data.avatarUrl || '',
+                    });
+                });
 
-              const activityQuery = query(collection(db, "user-activity"), orderBy("loginTime", "desc"));
-              const activitySnapshot = await getDocs(activityQuery);
-              
-              const activities = activitySnapshot.docs.map(doc => {
-                  const data = doc.data();
-                  const loginTime = data.loginTime as Timestamp;
-                  const userDetails = usersMap.get(data.userId) || { name: data.name || 'Pengguna Tidak Dikenal', position: data.position || 'N/A', avatar: data.avatar || '' };
+                const activityQuery = query(collection(db, "user-activity"), orderBy("loginTime", "desc"));
+                const activitySnapshot = await getDocs(activityQuery);
+                
+                const activities = activitySnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const loginTime = data.loginTime as Timestamp;
+                    const userDetails = usersMap.get(data.userId) || { name: data.name || 'Pengguna Tidak Dikenal', position: data.position || 'N/A', avatar: data.avatar || '' };
 
-                  return {
-                      id: doc.id,
-                      name: userDetails.name,
-                      position: userDetails.position,
-                      loginTime: loginTime ? new Date(loginTime.seconds * 1000).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' }) : 'N/A',
-                      ip: data.ip || 'N/A',
-                      avatar: userDetails.avatar,
-                  };
-              });
-              setUserActivity(activities);
-          } catch (error) {
-              console.error("Error fetching user activity:", error);
-          } finally {
-              setIsLoading(false);
-          }
-      };
+                    return {
+                        id: doc.id,
+                        name: userDetails.name,
+                        position: userDetails.position,
+                        loginTime: loginTime ? new Date(loginTime.seconds * 1000).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' }) : 'N/A',
+                        ip: data.ip || 'N/A',
+                        avatar: userDetails.avatar,
+                    };
+                });
+                setUserActivity(activities);
+            } else {
+                setIsAllowed(false);
+            }
+        } catch (error) {
+            console.error("Error checking permissions or fetching activity:", error);
+            setIsAllowed(false);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-      fetchActivity();
+    checkPermissionsAndFetch();
   }, []);
 
-  if (userPosition && userPosition !== 'Management') {
+  if (isLoading) {
+    return (
+      <main className="p-4 sm:px-6 md:p-8">
+        <Card>
+          <CardHeader>
+            <CardTitle><Skeleton className="h-7 w-48" /></CardTitle>
+            <CardDescription><Skeleton className="h-4 w-72" /></CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                    <TableHead>Pengguna</TableHead>
+                    <TableHead className="hidden sm:table-cell">Posisi</TableHead>
+                    <TableHead className="hidden md:table-cell">Waktu Login</TableHead>
+                    <TableHead className="text-right">Alamat IP</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...Array(5)].map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-full" />
+                        <Skeleton className="h-5 w-24" />
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-20" /></TableCell>
+                    <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-40" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-5 w-24 ml-auto" /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
+  if (isAllowed === false) {
     return (
         <main className="p-4 sm:px-6 md:p-8">
             <Card>
@@ -141,23 +185,7 @@ export default function UserActivityPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
-                <>
-                  {[...Array(5)].map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Skeleton className="h-9 w-9 rounded-full" />
-                          <Skeleton className="h-5 w-24" />
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-20" /></TableCell>
-                      <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-40" /></TableCell>
-                      <TableCell className="text-right"><Skeleton className="h-5 w-24 ml-auto" /></TableCell>
-                    </TableRow>
-                  ))}
-                </>
-              ) : userActivity.length > 0 ? (
+              {userActivity.length > 0 ? (
                 userActivity.map((activity) => (
                   <TableRow key={activity.id}>
                     <TableCell>

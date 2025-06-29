@@ -19,12 +19,14 @@ export default function DashboardLayout({
   const router = useRouter();
   const [userName, setUserName] = useState("");
   const [userPosition, setUserPosition] = useState("");
+  const [userStory, setUserStory] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
 
   const handleProfileUpdate = () => {
     setUserName(localStorage.getItem("userName") || "");
     setUserPosition(localStorage.getItem("userPosition") || "");
+    setUserStory(localStorage.getItem("userStory") || "");
     setAvatarUrl(localStorage.getItem("avatarUrl") || "");
   };
 
@@ -32,12 +34,17 @@ export default function DashboardLayout({
     handleProfileUpdate();
   }, []);
   
-  const onAvatarChange = () => {
+  const onProfileUpdate = () => {
+    handleProfileUpdate();
     const newAvatarUrl = localStorage.getItem("avatarUrl") || "";
-    setAvatarUrl(newAvatarUrl);
+    const newStory = localStorage.getItem("userStory") || "";
+    
     if(auth.currentUser && db) {
         const userRef = doc(db, 'users', auth.currentUser.uid);
-        updateDoc(userRef, { avatarUrl: newAvatarUrl });
+        updateDoc(userRef, { 
+          avatarUrl: newAvatarUrl,
+          story: newStory,
+        });
     }
   }
 
@@ -54,6 +61,7 @@ export default function DashboardLayout({
       localStorage.removeItem('userPosition');
       localStorage.removeItem('profileSetupComplete');
       localStorage.removeItem('avatarUrl');
+      localStorage.removeItem('userStory');
       router.push('/');
     } catch (error) {
       console.error("Gagal keluar:", error);
@@ -75,8 +83,9 @@ export default function DashboardLayout({
             <UserNav 
               name={userName} 
               position={userPosition} 
+              story={userStory}
               avatarUrl={avatarUrl} 
-              onAvatarChange={onAvatarChange}
+              onProfileUpdate={onProfileUpdate}
               isProfileDialogOpen={isProfileDialogOpen}
               onProfileDialogOpenChange={setProfileDialogOpen}
               onLogout={handleLogout}

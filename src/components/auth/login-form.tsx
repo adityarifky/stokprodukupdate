@@ -80,6 +80,7 @@ export function LoginForm() {
         localStorage.setItem('userName', userData.name || "");
         localStorage.setItem('userPosition', userData.position || "");
         localStorage.setItem('avatarUrl', userData.avatarUrl || "");
+        localStorage.setItem('userStory', userData.story || "");
         localStorage.setItem('profileSetupComplete', 'true');
       
         await addDoc(collection(db, "user-activity"), {
@@ -95,6 +96,7 @@ export function LoginForm() {
         localStorage.removeItem('userName');
         localStorage.removeItem('userPosition');
         localStorage.removeItem('avatarUrl');
+        localStorage.removeItem('userStory');
         localStorage.setItem('profileSetupComplete', 'false');
 
         // Store login info for activity logging after profile setup

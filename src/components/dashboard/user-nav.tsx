@@ -28,37 +28,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import getCroppedImg from "@/lib/image-utils";
-
-const greetings = [
-  "Halo Bro! 👋",
-  "Gimana Kabarmu? 😊",
-  "Semangat Yaaa! 🔥",
-  "Ojo Lemes Lee 💪",
-  "Tetap Waspada! 👀",
-  "Hai Ganteng! 😎",
-  "Hai Cantik! 😉",
-];
+import { Textarea } from "../ui/textarea";
 
 export function UserNav({ 
   name, 
   position, 
+  story,
   avatarUrl, 
-  onAvatarChange,
+  onProfileUpdate,
   isProfileDialogOpen,
   onProfileDialogOpenChange,
   onLogout
 }: { 
   name?: string, 
   position?: string, 
+  story?: string,
   avatarUrl?: string, 
-  onAvatarChange: () => void,
+  onProfileUpdate: () => void,
   isProfileDialogOpen: boolean,
   onProfileDialogOpenChange: (open: boolean) => void,
   onLogout: () => void
 }) {
-  const [greeting, setGreeting] = React.useState("");
-  const [isGreetingVisible, setIsGreetingVisible] = React.useState(true);
   const [tempAvatarUrl, setTempAvatarUrl] = React.useState(avatarUrl);
+  const [tempStory, setTempStory] = React.useState(story);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isImageViewerOpen, setImageViewerOpen] = React.useState(false);
 
@@ -69,36 +61,14 @@ export function UserNav({
   const [rotation, setRotation] = React.useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = React.useState<Area | null>(null);
 
-  const selectRandomGreeting = React.useCallback(() => {
-    setGreeting((currentGreeting) => {
-      let newGreeting;
-      do {
-        newGreeting = greetings[Math.floor(Math.random() * greetings.length)];
-      } while (newGreeting === currentGreeting);
-      return newGreeting;
-    });
-  }, []);
-
-  React.useEffect(() => {
-    selectRandomGreeting();
-  }, [selectRandomGreeting]);
-
-  React.useEffect(() => {
-    if (greeting) {
-      const intervalId = setInterval(() => {
-        setIsGreetingVisible(prev => !prev);
-      }, 3000);
-      return () => clearInterval(intervalId);
-    }
-  }, [greeting]);
-
   const handleProfileSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (tempAvatarUrl) {
       localStorage.setItem('avatarUrl', tempAvatarUrl);
     }
-    onAvatarChange();
-    selectRandomGreeting();
+    localStorage.setItem('userStory', tempStory || '');
+
+    onProfileUpdate();
     onProfileDialogOpenChange(false);
   };
 
@@ -122,8 +92,9 @@ export function UserNav({
   React.useEffect(() => {
     if (isProfileDialogOpen) {
       setTempAvatarUrl(avatarUrl || '');
+      setTempStory(story || '');
     }
-  }, [isProfileDialogOpen, avatarUrl]);
+  }, [isProfileDialogOpen, avatarUrl, story]);
   
   const onCropComplete = React.useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
@@ -151,17 +122,17 @@ export function UserNav({
   return (
     <div className="flex items-center gap-4">
       <div className="hidden md:block h-5">
-        <AnimatePresence>
-          {isGreetingVisible && (
+        <AnimatePresence mode="wait">
+          {story && (
             <motion.p
-              key={greeting}
-              initial={{ opacity: 0, y: 0 }}
+              key={story}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
               transition={{ ease: "easeInOut", duration: 1.5 }}
               className="text-sm text-muted-foreground font-medium"
             >
-              {greeting}
+              {story}
             </motion.p>
           )}
         </AnimatePresence>
@@ -253,6 +224,16 @@ export function UserNav({
                   className="hidden"
                   accept="image/*"
                 />
+              </div>
+               <div className="grid w-full gap-1.5">
+                  <Label htmlFor="story">Catatan Story</Label>
+                  <Textarea 
+                    placeholder="Lagi mikirin apa hari ini?" 
+                    id="story"
+                    value={tempStory || ''}
+                    onChange={(e) => setTempStory(e.target.value)} 
+                    className="min-h-[60px]"
+                  />
               </div>
             </div>
             <DialogFooter>

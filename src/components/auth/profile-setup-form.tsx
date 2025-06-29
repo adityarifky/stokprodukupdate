@@ -63,6 +63,7 @@ export function ProfileSetupForm({ onComplete }: { onComplete: () => void }) {
       await setDoc(userRef, {
         name: values.name,
         position: values.position,
+        story: "",
         avatarUrl: localStorage.getItem('avatarUrl') || '',
         status: "online",
         createdAt: serverTimestamp(),
@@ -71,6 +72,7 @@ export function ProfileSetupForm({ onComplete }: { onComplete: () => void }) {
 
       localStorage.setItem('userName', values.name);
       localStorage.setItem('userPosition', values.position);
+      localStorage.setItem('userStory', '');
       localStorage.setItem('profileSetupComplete', 'true');
       
       const pendingActivity = sessionStorage.getItem('pendingActivityLog');

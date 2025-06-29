@@ -84,12 +84,17 @@ export function LatestAnnouncements() {
                 {announcements.map((announcement, index) => (
                    <React.Fragment key={announcement.id}>
                         {index > 0 && <Separator />}
-                        <div>
-                            <h3 className="font-semibold leading-snug">{announcement.title}</h3>
-                            <p className="text-xs text-muted-foreground mb-3">
-                                {`Diterbitkan oleh ${announcement.author} pada ${announcement.timestamp}`}
-                            </p>
-                            <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap">
+                        <div className="space-y-2">
+                            <div className="flex items-start gap-3">
+                                <BellRing className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
+                                <div className="flex-1">
+                                    <h3 className="font-semibold leading-snug">{announcement.title}</h3>
+                                    <p className="text-xs text-muted-foreground">
+                                        {`Diterbitkan oleh ${announcement.author} pada ${announcement.timestamp}`}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap p-4 border bg-background rounded-lg shadow-inner">
                                 {announcement.content}
                             </div>
                         </div>

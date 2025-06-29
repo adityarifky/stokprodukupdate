@@ -148,7 +148,7 @@ export default function AnnouncementsPage() {
                                         <AccordionContent>
                                             <div className="pl-8 space-y-4">
                                                 {isManagement && (
-                                                    <div className="flex items-center gap-2 pt-2">
+                                                    <div className="flex items-center gap-2">
                                                         <Button variant="outline" size="sm" onClick={() => handleEditClick(announcement)}>
                                                             <Edit className="mr-2 h-4 w-4" />
                                                             <span>Edit</span>
@@ -175,7 +175,7 @@ export default function AnnouncementsPage() {
                                                         </AlertDialog>
                                                     </div>
                                                 )}
-                                                <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap pt-2">
+                                                <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap p-4 border bg-background rounded-lg shadow-inner">
                                                     {announcement.content}
                                                 </div>
                                             </div>

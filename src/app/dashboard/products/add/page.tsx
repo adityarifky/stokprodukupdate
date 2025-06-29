@@ -13,18 +13,36 @@ import Link from "next/link";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { onAuthStateChanged, type User } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function AddNewProductPage() {
-    const [userPosition, setUserPosition] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
 
     useEffect(() => {
-        const position = localStorage.getItem("userPosition");
-        setUserPosition(position);
-        setIsLoading(false);
+        const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
+            if (user && db) {
+                try {
+                    const userRef = doc(db, 'users', user.uid);
+                    const userSnap = await getDoc(userRef);
+                    if (userSnap.exists() && userSnap.data().position === 'Management') {
+                        setIsAllowed(true);
+                    } else {
+                        setIsAllowed(false);
+                    }
+                } catch {
+                    setIsAllowed(false);
+                }
+            } else {
+                setIsAllowed(false);
+            }
+        });
+
+        return () => unsubscribe();
     }, []);
 
-    if (isLoading) {
+    if (isAllowed === null) {
         return (
             <main className="p-4 sm:px-6 md:p-8">
                 <div className="max-w-3xl mx-auto">
@@ -34,7 +52,7 @@ export default function AddNewProductPage() {
         );
     }
 
-    if (userPosition !== 'Management') {
+    if (isAllowed === false) {
         return (
             <main className="p-4 sm:px-6 md:p-8">
                 <Card>

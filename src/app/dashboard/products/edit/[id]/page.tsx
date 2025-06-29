@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { doc, getDoc, DocumentData } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditProductForm } from "@/components/dashboard/edit-product-form";
+import { onAuthStateChanged, type User } from "firebase/auth";
 
 interface Product extends DocumentData {
     id: string;
@@ -27,17 +28,37 @@ export default function EditProductPage() {
     const [product, setProduct] = useState<Product | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [userPosition, setUserPosition] = useState<string | null>(null);
+    const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
 
     useEffect(() => {
-        const position = localStorage.getItem("userPosition");
-        setUserPosition(position);
+        const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
+            if (user && db) {
+                try {
+                    const userRef = doc(db, 'users', user.uid);
+                    const userSnap = await getDoc(userRef);
+                    if (userSnap.exists() && userSnap.data().position === 'Management') {
+                        setIsAllowed(true);
+                    } else {
+                        setIsAllowed(false);
+                        setIsLoading(false);
+                    }
+                } catch {
+                    setIsAllowed(false);
+                    setIsLoading(false);
+                }
+            } else {
+                setIsAllowed(false);
+                setIsLoading(false);
+            }
+        });
 
-        if (position !== 'Management') {
-            setIsLoading(false);
-            return;
-        }
-
+        return () => unsubscribe();
+    }, []);
+    
+    useEffect(() => {
+        if (isAllowed === false) return;
+        if (isAllowed === null) return;
+        
         if (!id || typeof id !== 'string') {
              setIsLoading(false);
              setError("ID produk tidak valid.");
@@ -64,12 +85,10 @@ export default function EditProductPage() {
         };
 
         fetchProduct();
-    }, [id]);
-    
-    const isManagement = userPosition === 'Management';
+    }, [id, isAllowed]);
 
     const renderContent = () => {
-        if (isLoading) {
+        if (isLoading || isAllowed === null) {
             return (
                 <Card>
                     <CardHeader>
@@ -96,7 +115,7 @@ export default function EditProductPage() {
             );
         }
 
-        if (!isManagement) {
+        if (isAllowed === false) {
              return (
                 <Card>
                     <CardHeader>

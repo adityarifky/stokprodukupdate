@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from "react";
@@ -22,6 +21,7 @@ import { auth, db } from "@/lib/firebase";
 import { collection, getDocs, query, orderBy, Timestamp, doc, getDoc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShieldAlert } from "lucide-react";
+import { onAuthStateChanged, type User } from "firebase/auth";
 
 interface Activity {
     id: string;
@@ -44,62 +44,63 @@ export default function UserActivityPage() {
   const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const checkPermissionsAndFetch = async () => {
-        if (!auth.currentUser || !db) {
-            setIsLoading(false);
-            setIsAllowed(false);
-            return;
-        }
-
+    const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
+      if (user && db) {
         try {
-            const userRef = doc(db, 'users', auth.currentUser.uid);
-            const userSnap = await getDoc(userRef);
+          const userRef = doc(db, 'users', user.uid);
+          const userSnap = await getDoc(userRef);
 
-            if (userSnap.exists() && userSnap.data().position === 'Management') {
-                setIsAllowed(true);
-                
-                const usersQuery = query(collection(db, "users"));
-                const usersSnapshot = await getDocs(usersQuery);
-                const usersMap = new Map<string, UserData>();
-                usersSnapshot.forEach(doc => {
-                    const data = doc.data();
-                    usersMap.set(doc.id, {
-                        name: data.name || 'N/A',
-                        position: data.position || 'N/A',
-                        avatar: data.avatarUrl || '',
-                    });
-                });
+          if (userSnap.exists() && userSnap.data().position === 'Management') {
+            setIsAllowed(true);
 
-                const activityQuery = query(collection(db, "user-activity"), orderBy("loginTime", "desc"));
-                const activitySnapshot = await getDocs(activityQuery);
-                
-                const activities = activitySnapshot.docs.map(doc => {
-                    const data = doc.data();
-                    const loginTime = data.loginTime as Timestamp;
-                    const userDetails = usersMap.get(data.userId) || { name: data.name || 'Pengguna Tidak Dikenal', position: data.position || 'N/A', avatar: data.avatar || '' };
+            // Fetch data only if allowed
+            const usersQuery = query(collection(db, "users"));
+            const usersSnapshot = await getDocs(usersQuery);
+            const usersMap = new Map<string, UserData>();
+            usersSnapshot.forEach(doc => {
+              const data = doc.data();
+              usersMap.set(doc.id, {
+                name: data.name || 'N/A',
+                position: data.position || 'N/A',
+                avatar: data.avatarUrl || '',
+              });
+            });
 
-                    return {
-                        id: doc.id,
-                        name: userDetails.name,
-                        position: userDetails.position,
-                        loginTime: loginTime ? new Date(loginTime.seconds * 1000).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' }) : 'N/A',
-                        ip: data.ip || 'N/A',
-                        avatar: userDetails.avatar,
-                    };
-                });
-                setUserActivity(activities);
-            } else {
-                setIsAllowed(false);
-            }
-        } catch (error) {
-            console.error("Error checking permissions or fetching activity:", error);
+            const activityQuery = query(collection(db, "user-activity"), orderBy("loginTime", "desc"));
+            const activitySnapshot = await getDocs(activityQuery);
+
+            const activities = activitySnapshot.docs.map(doc => {
+              const data = doc.data();
+              const loginTime = data.loginTime as Timestamp;
+              const userDetails = usersMap.get(data.userId) || { name: data.name || 'Pengguna Tidak Dikenal', position: data.position || 'N/A', avatar: data.avatar || '' };
+
+              return {
+                id: doc.id,
+                name: userDetails.name,
+                position: userDetails.position,
+                loginTime: loginTime ? new Date(loginTime.seconds * 1000).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' }) : 'N/A',
+                ip: data.ip || 'N/A',
+                avatar: userDetails.avatar,
+              };
+            });
+            setUserActivity(activities);
+          } else {
             setIsAllowed(false);
+          }
+        } catch (error) {
+          console.error("Error checking permissions or fetching activity:", error);
+          setIsAllowed(false);
         } finally {
-            setIsLoading(false);
+          setIsLoading(false);
         }
-    };
+      } else {
+        // No user is signed in.
+        setIsAllowed(false);
+        setIsLoading(false);
+      }
+    });
 
-    checkPermissionsAndFetch();
+    return () => unsubscribe();
   }, []);
 
   if (isLoading) {

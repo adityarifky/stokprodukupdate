@@ -21,12 +21,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { db, storage } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, DocumentData, doc, deleteDoc } from 'firebase/firestore';
+import { db, storage, auth } from '@/lib/firebase';
+import { collection, onSnapshot, query, orderBy, DocumentData, doc, deleteDoc, getDoc } from 'firebase/firestore';
 import { ref, deleteObject } from "firebase/storage";
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { onAuthStateChanged, type User } from 'firebase/auth';
 
 interface Product {
     id: string;
@@ -40,18 +41,30 @@ export function ProductList() {
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
-    const [userPosition, setUserPosition] = useState<string | null>(null);
+    const [isManagement, setIsManagement] = useState(false);
 
     useEffect(() => {
-        const position = localStorage.getItem("userPosition");
-        setUserPosition(position);
-
         if (!db) {
             setIsLoading(false);
             return;
         }
+
+        const unsubscribeAuth = onAuthStateChanged(auth, async (user: User | null) => {
+            if (user) {
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists() && userDoc.data().position === 'Management') {
+                    setIsManagement(true);
+                } else {
+                    setIsManagement(false);
+                }
+            } else {
+                setIsManagement(false);
+            }
+        });
+        
         const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const unsubscribeProducts = onSnapshot(q, (querySnapshot) => {
             const productsData: Product[] = [];
             querySnapshot.forEach((doc: DocumentData) => {
                 productsData.push({ id: doc.id, ...doc.data() } as Product);
@@ -63,7 +76,10 @@ export function ProductList() {
             setIsLoading(false);
         });
 
-        return () => unsubscribe();
+        return () => {
+            unsubscribeAuth();
+            unsubscribeProducts();
+        };
     }, []);
 
     const handleDeleteProduct = async (product: Product) => {
@@ -89,8 +105,6 @@ export function ProductList() {
             });
         }
     };
-
-    const isManagement = userPosition === 'Management';
 
     return (
         <Card>

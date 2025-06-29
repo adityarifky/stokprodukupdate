@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot, Timestamp, doc, deleteDoc } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
+import { collection, query, orderBy, onSnapshot, Timestamp, doc, deleteDoc, getDoc } from 'firebase/firestore';
 import {
   Card,
   CardContent,
@@ -23,6 +23,7 @@ import { AnnouncementFormDialog } from '@/components/dashboard/announcement-form
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { AnnouncementReplies } from '@/components/dashboard/announcement-replies';
+import { onAuthStateChanged, type User } from 'firebase/auth';
 
 interface Announcement {
     id: string;
@@ -35,25 +36,34 @@ interface Announcement {
 export default function AnnouncementsPage() {
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [userPosition, setUserPosition] = useState<string | null>(null);
+    const [isManagement, setIsManagement] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingAnnouncement, setEditingAnnouncement] = useState<Omit<Announcement, 'timestamp'> | null>(null);
     const { toast } = useToast();
 
     useEffect(() => {
-        const position = localStorage.getItem("userPosition");
-        if (position) {
-            setUserPosition(position);
-        }
-
         if (!db) {
             setIsLoading(false);
             return;
         }
 
+        const unsubscribeAuth = onAuthStateChanged(auth, async (user: User | null) => {
+            if (user) {
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists() && userDoc.data().position === 'Management') {
+                    setIsManagement(true);
+                } else {
+                    setIsManagement(false);
+                }
+            } else {
+                setIsManagement(false);
+            }
+        });
+
         const q = query(collection(db, "announcements"), orderBy("timestamp", "desc"));
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        const unsubscribeAnnouncements = onSnapshot(q, (snapshot) => {
             const announcementsData = snapshot.docs.map(doc => {
                 const data = doc.data();
                 const timestamp = data.timestamp as Timestamp;
@@ -72,7 +82,10 @@ export default function AnnouncementsPage() {
             setIsLoading(false);
         });
 
-        return () => unsubscribe();
+        return () => {
+            unsubscribeAuth();
+            unsubscribeAnnouncements();
+        };
     }, []);
 
     const handleAddClick = () => {
@@ -102,8 +115,6 @@ export default function AnnouncementsPage() {
             });
         }
     };
-    
-    const isManagement = userPosition === 'Management';
 
     return (
         <>

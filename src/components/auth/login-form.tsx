@@ -88,7 +88,7 @@ export function LoginForm() {
     <Card className="w-full shadow-lg border-2 border-amber-100/50">
       <CardHeader>
         <CardTitle>Masuk Akun</CardTitle>
-        <CardDescription>Daily Trend Update, Only the Best, Only Today.</CardDescription>
+        <CardDescription>Baked with Feelings.</CardDescription>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>

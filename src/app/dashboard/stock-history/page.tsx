@@ -80,39 +80,39 @@ export default function StockHistoryPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Produk</TableHead>
-                <TableHead>Aktivitas</TableHead>
-                <TableHead className="hidden sm:table-cell">Jumlah</TableHead>
-                <TableHead className="hidden md:table-cell text-right">Stok Akhir</TableHead>
-                <TableHead className="hidden md:table-cell">Tanggal</TableHead>
-                <TableHead className="text-right">Nama</TableHead>
+                <TableHead className="text-center">Produk</TableHead>
+                <TableHead className="text-center">Aktivitas</TableHead>
+                <TableHead className="hidden sm:table-cell text-center">Jumlah</TableHead>
+                <TableHead className="hidden md:table-cell text-center">Stok Akhir</TableHead>
+                <TableHead className="hidden md:table-cell text-center">Tanggal</TableHead>
+                <TableHead className="text-center">Nama</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 [...Array(5)].map((_, i) => (
                     <TableRow key={i}>
-                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                        <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-10" /></TableCell>
-                        <TableCell className="hidden md:table-cell text-right"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
-                        <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-32" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-5 w-20 ml-auto" /></TableCell>
+                        <TableCell className="text-center"><Skeleton className="h-5 w-24 mx-auto" /></TableCell>
+                        <TableCell className="text-center"><Skeleton className="h-6 w-24 mx-auto" /></TableCell>
+                        <TableCell className="hidden sm:table-cell text-center"><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
+                        <TableCell className="hidden md:table-cell text-center"><Skeleton className="h-5 w-10 mx-auto" /></TableCell>
+                        <TableCell className="hidden md:table-cell text-center"><Skeleton className="h-5 w-32 mx-auto" /></TableCell>
+                        <TableCell className="text-center"><Skeleton className="h-5 w-20 mx-auto" /></TableCell>
                     </TableRow>
                 ))
               ) : activities.length > 0 ? (
                 activities.map((activity) => (
                   <TableRow key={activity.id}>
-                    <TableCell className="font-medium">{activity.productName}</TableCell>
-                    <TableCell>
-                      <Badge variant={activity.operation === 'add' ? 'default' : 'destructive'}>
+                    <TableCell className="font-medium text-center">{activity.productName}</TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant={activity.operation === 'add' ? 'default' : 'destructive'} className="w-[105px] justify-center">
                         {activity.operation === 'add' ? 'Penambahan' : 'Pengurangan'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">{activity.quantity}</TableCell>
-                    <TableCell className="hidden md:table-cell text-right">{activity.stockAfter}</TableCell>
-                    <TableCell className="hidden md:table-cell">{activity.timestamp}</TableCell>
-                    <TableCell className="text-right">{activity.userName}</TableCell>
+                    <TableCell className="hidden sm:table-cell text-center">{activity.quantity}</TableCell>
+                    <TableCell className="hidden md:table-cell text-center">{activity.stockAfter}</TableCell>
+                    <TableCell className="hidden md:table-cell text-center">{activity.timestamp}</TableCell>
+                    <TableCell className="text-center">{activity.userName}</TableCell>
                   </TableRow>
                 ))
               ) : (

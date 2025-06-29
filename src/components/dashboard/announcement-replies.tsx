@@ -7,6 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '../ui/skeleton';
 import { Separator } from '../ui/separator';
 
@@ -96,23 +98,31 @@ export function AnnouncementReplies({ announcementId }: AnnouncementRepliesProps
                     </div>
                 </div>
             ) : replies.length > 0 ? (
-                <div className="space-y-4 max-h-48 overflow-y-auto pr-2">
-                    {replies.map(reply => (
-                        <div key={reply.id} className="flex items-start gap-3">
-                            <Avatar className="h-9 w-9 border">
-                                <AvatarImage src={reply.authorAvatar} alt={reply.authorName} />
-                                <AvatarFallback>{reply.authorName.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                                <div className="flex items-baseline gap-2">
-                                    <p className="font-semibold text-sm">{reply.authorName}</p>
-                                    <p className="text-xs text-muted-foreground">{reply.timestamp}</p>
+                <ScrollArea className="h-48 w-full rounded-md border p-4">
+                    <div className="space-y-4">
+                        {replies.map(reply => (
+                            <motion.div
+                                key={reply.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="flex items-start gap-3"
+                            >
+                                <Avatar className="h-9 w-9 border">
+                                    <AvatarImage src={reply.authorAvatar} alt={reply.authorName} />
+                                    <AvatarFallback>{reply.authorName.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                    <div className="flex items-baseline gap-2">
+                                        <p className="font-semibold text-sm">{reply.authorName}</p>
+                                        <p className="text-xs text-muted-foreground">{reply.timestamp}</p>
+                                    </div>
+                                    <p className="text-sm text-foreground">{reply.text}</p>
                                 </div>
-                                <p className="text-sm text-foreground">{reply.text}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </ScrollArea>
             ) : (
                 <p className="text-xs text-center text-muted-foreground py-2">Belum ada balasan.</p>
             )}

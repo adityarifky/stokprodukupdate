@@ -44,7 +44,7 @@ export default function DashboardPage() {
             <CardContent>
               <div className="text-2xl font-bold">6</div>
               <p className="text-xs text-muted-foreground">
-                Total produk yang dikelola
+                {currentDate || "Memuat tanggal..."}
               </p>
             </CardContent>
           </Card>
@@ -58,7 +58,7 @@ export default function DashboardPage() {
             <CardContent>
               <div className="text-2xl font-bold">127</div>
               <p className="text-xs text-muted-foreground">
-                Total stok semua produk
+                {currentDate || "Memuat tanggal..."}
               </p>
             </CardContent>
           </Card>
@@ -86,7 +86,7 @@ export default function DashboardPage() {
             <CardContent>
               <div className="text-2xl font-bold">+573</div>
               <p className="text-xs text-muted-foreground">
-                +201 sejak jam terakhir
+                {currentDate || "Memuat tanggal..."}
               </p>
             </CardContent>
           </Card>

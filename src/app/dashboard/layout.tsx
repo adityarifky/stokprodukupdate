@@ -22,16 +22,13 @@ function DashboardAppLayout({ children }: { children: React.ReactNode }) {
 
   const { user, userProfile, loading } = useAuth();
   
-  // Profile is considered complete if the userProfile object exists.
   const isProfileSetupComplete = !!userProfile;
 
   const handleProfileUpdate = () => {
-    // The auth context now handles profile updates automatically via onSnapshot.
-    // This function is called when the setup form completes, but we don't need to do anything here.
+    // Auth context handles profile updates via onSnapshot.
   };
 
   const onProfileUpdateDialog = () => {
-    // This function is for the UserNav dialog when updating avatar/story
     if(auth.currentUser && db && userProfile) {
         const newAvatarUrl = localStorage.getItem("avatarUrl") || userProfile.avatarUrl;
         const newStory = localStorage.getItem("userStory") || userProfile.story;
@@ -60,7 +57,6 @@ function DashboardAppLayout({ children }: { children: React.ReactNode }) {
             getToken(messaging).then(async (currentToken) => {
               if (currentToken) {
                 const userRef = doc(db, 'users', user.uid);
-                // No need to getDoc, userProfile from context has the data.
                 if (userProfile && (userProfile as any).fcmToken !== currentToken) {
                   await updateDoc(userRef, { fcmToken: currentToken });
                 }
@@ -76,18 +72,19 @@ function DashboardAppLayout({ children }: { children: React.ReactNode }) {
   }, [toast, user, userProfile]);
 
   const handleLogout = () => {
-    // This now triggers the logout process.
-    // It causes this component to re-render and show the "Logging out..." screen.
-    // This unmounts the children, which cleans up all Firestore listeners.
-    // The useEffect hook below will then handle the actual logout logic safely.
     setIsLoggingOut(true);
   };
 
   useEffect(() => {
-    // This effect runs ONLY when isLoggingOut becomes true.
     if (isLoggingOut) {
-      const performLogout = async () => {
+      const performSafeLogout = async () => {
         try {
+          // This short delay is crucial. It ensures that the component tree has
+          // unmounted and the cleanup effects (which detach Firestore listeners)
+          // have had time to propagate before we change authentication state.
+          // This definitively resolves the race condition.
+          await new Promise(resolve => setTimeout(resolve, 100));
+
           if (auth.currentUser && db) {
             const userDocRef = doc(db, "users", auth.currentUser.uid);
             await updateDoc(userDocRef, {
@@ -99,14 +96,14 @@ function DashboardAppLayout({ children }: { children: React.ReactNode }) {
           // The onAuthStateChanged listener in AuthProvider will handle the redirect.
         } catch (error) {
           console.error("Gagal keluar:", error);
-          // As a fallback, still try to sign out.
+          // As a fallback, still try to sign out if anything above fails.
           if (auth.currentUser) {
             signOut(auth).catch(e => console.error("Gagal keluar saat fallback:", e));
           }
         }
       };
       
-      performLogout();
+      performSafeLogout();
     }
   }, [isLoggingOut]);
 

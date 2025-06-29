@@ -105,6 +105,7 @@ export function AnnouncementFormDialog({ isOpen, onOpenChange, announcement }: A
                         title: `Pengumuman Diperbarui: ${values.title}`,
                         content: `Cek pembaruan dari ${userName}.`,
                         excludeUserId: auth.currentUser?.uid, // Tidak notifikasi diri sendiri
+                        link: '/dashboard/announcements'
                     }),
                 }).catch(err => console.error("Gagal mengirim notifikasi:", err));
             } else {
@@ -123,6 +124,7 @@ export function AnnouncementFormDialog({ isOpen, onOpenChange, announcement }: A
                         title: `Pengumuman Baru: ${values.title}`,
                         content: `Cek pengumuman baru dari ${userName}.`,
                         excludeUserId: auth.currentUser?.uid, // Tidak notifikasi diri sendiri
+                        link: '/dashboard/announcements'
                     }),
                 }).catch(err => console.error("Gagal mengirim notifikasi:", err));
             }

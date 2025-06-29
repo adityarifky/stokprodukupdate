@@ -5,12 +5,12 @@ import { getAuth, type Auth } from "firebase/auth";
 // Pastikan Anda membuat file .env.local di root proyek Anda
 // dan menambahkan kredensial Firebase Anda di sana.
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyBKd3d9RFP-W8i7G9KwUmg7LKFoz9yCTck",
+  authDomain: "produkstok-a7412.firebaseapp.com",
+  projectId: "produkstok-a7412",
+  storageBucket: "produkstok-a7412.firebasestorage.app",
+  messagingSenderId: "908619745272",
+  appId: "1:908619745272:web:ac622a5ed7f9cada4df80d",
 };
 
 let app: FirebaseApp | null = null;

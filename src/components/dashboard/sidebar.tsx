@@ -1,4 +1,3 @@
-
 "use client";
 import Link from "next/link";
 import {
@@ -39,31 +38,25 @@ export function DashboardSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <Link href="/dashboard" passHref>
-              <SidebarMenuButton asChild tooltip="Dasbor" isActive={pathname === '/dashboard'}>
-                <>
-                  <Home />
-                  <span>Dasbor</span>
-                </>
+              <SidebarMenuButton tooltip="Dasbor" isActive={pathname === '/dashboard'}>
+                <Home />
+                <span>Dasbor</span>
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <Link href="#" passHref>
-              <SidebarMenuButton asChild tooltip="Produk">
-                 <>
-                  <Package />
-                  <span>Produk</span>
-                </>
+              <SidebarMenuButton tooltip="Produk">
+                <Package />
+                <span>Produk</span>
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
            <SidebarMenuItem>
             <Link href="#" passHref>
-              <SidebarMenuButton asChild tooltip="Laporan">
-                <>
-                  <BarChart2 />
-                  <span>Laporan</span>
-                </>
+              <SidebarMenuButton tooltip="Laporan">
+                <BarChart2 />
+                <span>Laporan</span>
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
@@ -73,11 +66,9 @@ export function DashboardSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
              <Link href="#" passHref>
-              <SidebarMenuButton asChild tooltip="Pengaturan">
-                <>
-                  <Settings />
-                  <span>Pengaturan</span>
-                </>
+              <SidebarMenuButton tooltip="Pengaturan">
+                <Settings />
+                <span>Pengaturan</span>
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>

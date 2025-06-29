@@ -1,4 +1,4 @@
-import { UpdateStockForm } from "@/components/dashboard/update-stock-form";
+import { AddProductForm } from "@/components/dashboard/add-product-form";
 import {
   Card,
   CardContent,
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export default function UpdateStockPage() {
+export default function AddNewProductPage() {
     return (
         <main className="p-4 sm:px-6 md:p-8">
             <div className="max-w-3xl mx-auto">
@@ -22,18 +22,18 @@ export default function UpdateStockPage() {
                         </Link>
                     </Button>
                     <h1 className="flex-1 shrink-0 whitespace-nowrap text-xl font-semibold tracking-tight sm:grow-0">
-                        Update Stok Produk
+                        Tambah Produk Baru
                     </h1>
                 </div>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Sesuaikan Kategori & Produk</CardTitle>
+                        <CardTitle>Detail Produk</CardTitle>
                         <CardDescription>
-                            Pilih produk dan masukkan jumlah untuk menambah atau mengurangi stok.
+                            Isi informasi di bawah ini untuk menambahkan produk baru. Stok awal akan diatur ke 0.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <UpdateStockForm />
+                        <AddProductForm />
                     </CardContent>
                 </Card>
             </div>

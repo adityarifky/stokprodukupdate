@@ -42,9 +42,22 @@ const greetings = [
   "Hai Cantik! 😉",
 ];
 
-export function UserNav({ name, position, avatarUrl, onAvatarChange }: { name?: string, position?: string, avatarUrl?: string, onAvatarChange: () => void }) {
+export function UserNav({ 
+  name, 
+  position, 
+  avatarUrl, 
+  onAvatarChange,
+  isProfileDialogOpen,
+  onProfileDialogOpenChange
+}: { 
+  name?: string, 
+  position?: string, 
+  avatarUrl?: string, 
+  onAvatarChange: () => void,
+  isProfileDialogOpen: boolean,
+  onProfileDialogOpenChange: (open: boolean) => void 
+}) {
   const router = useRouter();
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [greeting, setGreeting] = React.useState("");
   const [isGreetingVisible, setIsGreetingVisible] = React.useState(true);
   const [tempAvatarUrl, setTempAvatarUrl] = React.useState(avatarUrl);
@@ -88,7 +101,7 @@ export function UserNav({ name, position, avatarUrl, onAvatarChange }: { name?: 
     }
     onAvatarChange();
     selectRandomGreeting();
-    setIsDialogOpen(false);
+    onProfileDialogOpenChange(false);
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,10 +122,10 @@ export function UserNav({ name, position, avatarUrl, onAvatarChange }: { name?: 
   };
 
   React.useEffect(() => {
-    if (isDialogOpen) {
+    if (isProfileDialogOpen) {
       setTempAvatarUrl(avatarUrl || '');
     }
-  }, [isDialogOpen, avatarUrl]);
+  }, [isProfileDialogOpen, avatarUrl]);
   
   const onCropComplete = React.useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
@@ -169,7 +182,7 @@ export function UserNav({ name, position, avatarUrl, onAvatarChange }: { name?: 
           )}
         </AnimatePresence>
       </div>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isProfileDialogOpen} onOpenChange={onProfileDialogOpenChange}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">

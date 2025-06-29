@@ -15,6 +15,7 @@ export default function DashboardLayout({
   const [userName, setUserName] = useState("");
   const [userPosition, setUserPosition] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
 
   const handleProfileUpdate = () => {
     setUserName(localStorage.getItem("userName") || "");
@@ -42,12 +43,19 @@ export default function DashboardLayout({
                     priority
                 />
             </Link>
-            <UserNav name={userName} position={userPosition} avatarUrl={avatarUrl} onAvatarChange={onAvatarChange} />
+            <UserNav 
+              name={userName} 
+              position={userPosition} 
+              avatarUrl={avatarUrl} 
+              onAvatarChange={onAvatarChange}
+              isProfileDialogOpen={isProfileDialogOpen}
+              onProfileDialogOpenChange={setProfileDialogOpen}
+            />
         </header>
         <main className="flex-1 pb-16">
             <ProfileSetupGuard onProfileComplete={handleProfileUpdate}>{children}</ProfileSetupGuard>
         </main>
-        <BottomNav />
+        <BottomNav onProfileClick={() => setProfileDialogOpen(true)} />
     </div>
   );
 }

@@ -1,11 +1,15 @@
 
 rules_version = '2';
+
 service firebase.storage {
   match /b/{bucket}/o {
-    // Only authenticated users can upload product images.
-    // Anyone can read product images.
-    match /products/{fileName} {
+    // Izinkan semua orang untuk membaca gambar
+    match /{allPaths=**} {
       allow read;
+    }
+    
+    // Izinkan pengguna yang sudah login untuk mengunggah file
+    match /products/{fileName} {
       allow write: if request.auth != null;
     }
   }

@@ -23,8 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, Calendar as CalendarIcon, ArrowUp, ArrowDown, Upload } from 'lucide-react';
 import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import type { DateRange } from "react-day-picker";
-import { format, startOfDay, endOfDay, startOfMonth, endOfMonth } from "date-fns";
+import { format, startOfDay, endOfDay } from "date-fns";
 import { id } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { CSVLink } from "react-csv";
@@ -39,22 +38,19 @@ interface ReportData {
 export default function ReportsPage() {
     const [reportData, setReportData] = useState<ReportData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [dateRange, setDateRange] = useState<DateRange | undefined>({
-        from: startOfMonth(new Date()),
-        to: endOfMonth(new Date()),
-    });
+    const [date, setDate] = useState<Date | undefined>(new Date());
 
     useEffect(() => {
         const fetchReportData = async () => {
-            if (!db || !dateRange?.from) {
+            if (!db || !date) {
                 setReportData([]);
                 setIsLoading(false);
                 return;
             }
             setIsLoading(true);
 
-            const fromDate = startOfDay(dateRange.from);
-            const toDate = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
+            const fromDate = startOfDay(date);
+            const toDate = endOfDay(date);
             
             const q = query(
                 collection(db, "stock_history"),
@@ -93,10 +89,10 @@ export default function ReportsPage() {
         };
 
         fetchReportData();
-    }, [dateRange]);
+    }, [date]);
 
-    const handleDateSelect = (range: DateRange | undefined) => {
-        setDateRange(range);
+    const handleDateSelect = (selectedDate: Date | undefined) => {
+        setDate(selectedDate);
     };
     
     const csvHeaders = [
@@ -107,10 +103,9 @@ export default function ReportsPage() {
     ];
 
     const getCsvFilename = () => {
-        if (!dateRange?.from) return "laporan-stok.csv";
-        const fromDate = format(dateRange.from, "yyyy-MM-dd");
-        const toDate = dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : fromDate;
-        return `laporan-stok_${fromDate}_sampai_${toDate}.csv`;
+        if (!date) return "laporan-stok-harian.csv";
+        const formattedDate = format(date, "yyyy-MM-dd");
+        return `laporan-stok-harian_${formattedDate}.csv`;
     };
 
     return (
@@ -121,10 +116,10 @@ export default function ReportsPage() {
                         <div className="flex-1">
                             <div className="flex items-center gap-2">
                                 <FileText className="h-6 w-6" />
-                                <CardTitle>Laporan Akumulasi Stok</CardTitle>
+                                <CardTitle>Laporan Stok Harian</CardTitle>
                             </div>
                             <CardDescription>
-                                Analisis penambahan dan pengurangan stok produk dalam rentang waktu tertentu.
+                                Analisis penambahan dan pengurangan stok produk untuk tanggal yang dipilih.
                             </CardDescription>
                         </div>
                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -135,18 +130,12 @@ export default function ReportsPage() {
                                         variant={"outline"}
                                         className={cn(
                                             "w-full sm:w-[260px] justify-start text-left font-normal",
-                                            !dateRange && "text-muted-foreground"
+                                            !date && "text-muted-foreground"
                                         )}
                                     >
                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {dateRange?.from ? (
-                                            dateRange.to ? (
-                                                <>
-                                                    {format(dateRange.from, "d LLL y", { locale: id })} - {format(dateRange.to, "d LLL y", { locale: id })}
-                                                </>
-                                            ) : (
-                                                format(dateRange.from, "d LLL y", { locale: id })
-                                            )
+                                        {date ? (
+                                            format(date, "d LLL y", { locale: id })
                                         ) : (
                                             <span>Pilih tanggal</span>
                                         )}
@@ -155,11 +144,9 @@ export default function ReportsPage() {
                                 <PopoverContent className="w-auto p-0" align="end">
                                     <Calendar
                                         initialFocus
-                                        mode="range"
-                                        defaultMonth={dateRange?.from}
-                                        selected={dateRange}
+                                        mode="single"
+                                        selected={date}
                                         onSelect={handleDateSelect}
-                                        numberOfMonths={2}
                                         locale={id}
                                     />
                                 </PopoverContent>
@@ -233,7 +220,7 @@ export default function ReportsPage() {
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={4} className="h-24 text-center">
-                                        Tidak ada data aktivitas untuk rentang tanggal yang dipilih.
+                                        Tidak ada data aktivitas untuk tanggal yang dipilih.
                                     </TableCell>
                                 </TableRow>
                             )}

@@ -15,11 +15,11 @@ import {
 const chartConfig = {
   added: {
     label: "Stok Masuk",
-    color: "hsl(var(--chart-2))",
+    color: "hsl(142, 71%, 45%)",
   },
   subtracted: {
     label: "Stok Keluar",
-    color: "hsl(var(--chart-1))",
+    color: "hsl(var(--destructive))",
   },
 } satisfies ChartConfig
 

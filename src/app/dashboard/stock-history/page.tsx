@@ -85,7 +85,7 @@ export default function StockHistoryPage() {
                 <TableHead className="hidden sm:table-cell">Jumlah</TableHead>
                 <TableHead className="hidden md:table-cell text-right">Stok Akhir</TableHead>
                 <TableHead className="hidden md:table-cell">Tanggal</TableHead>
-                <TableHead className="text-right">Oleh</TableHead>
+                <TableHead className="text-right">Nama</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

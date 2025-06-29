@@ -121,8 +121,8 @@ export function UserNav({
   }, [imageToCrop, croppedAreaPixels, rotation]);
 
   return (
-    <div className="flex items-center gap-4">
-      <div className="hidden md:flex items-center">
+    <div className="flex items-center gap-2 md:gap-4">
+      <div className="flex min-w-0 items-center">
         <AnimatePresence mode="wait">
           {story && (
             <motion.p
@@ -131,7 +131,7 @@ export function UserNav({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -5 }}
               transition={{ ease: "easeInOut", duration: 0.5 }}
-              className="text-sm text-muted-foreground font-medium truncate max-w-xs"
+              className="truncate text-sm font-medium text-muted-foreground"
             >
               {story}
             </motion.p>

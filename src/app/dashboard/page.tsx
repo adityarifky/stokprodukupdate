@@ -83,7 +83,7 @@ export default function DashboardPage() {
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Card>
+              <Card className="relative overflow-hidden">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">{category.name}</CardTitle>
                   <category.icon className="h-4 w-4 text-muted-foreground" />
@@ -94,6 +94,17 @@ export default function DashboardPage() {
                       Total stok tersedia.
                   </p>
                 </CardContent>
+                <motion.div
+                    className="absolute bottom-4 right-4 text-xs text-muted-foreground"
+                    animate={{ opacity: [0.3, 1, 0.3] }}
+                    transition={{
+                        duration: 2.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                    }}
+                >
+                    Klik untuk melihat detail
+                </motion.div>
               </Card>
             </motion.div>
         ))}

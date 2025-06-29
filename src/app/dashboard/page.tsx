@@ -87,6 +87,11 @@ export default function DashboardPage() {
     whileTap: { scale: 0.95 },
   };
   
+  const overlayVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.3, ease: "easeIn" } },
+  };
+
   const renderStat = (value: number | undefined) => {
     if (isLoading) return <Skeleton className="h-8 w-16" />;
     return <div className="text-2xl font-bold">{value ?? 0}</div>;
@@ -96,7 +101,12 @@ export default function DashboardPage() {
     <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
         <Link href="/dashboard/products">
-          <motion.div {...cardAnimation}>
+          <motion.div 
+            className="relative"
+            initial="hidden"
+            whileHover="visible"
+            {...cardAnimation}
+          >
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Produk Terdaftar</CardTitle>
@@ -109,10 +119,21 @@ export default function DashboardPage() {
                 </p>
               </CardContent>
             </Card>
+            <motion.div
+              variants={overlayVariants}
+              className="absolute bottom-2 right-3 text-xs text-muted-foreground pointer-events-none"
+            >
+              Klik untuk melihat detail
+            </motion.div>
           </motion.div>
         </Link>
         <Link href="/dashboard/products">
-          <motion.div {...cardAnimation}>
+          <motion.div 
+            className="relative"
+            initial="hidden"
+            whileHover="visible"
+            {...cardAnimation}
+          >
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Stok Creampuff</CardTitle>
@@ -125,10 +146,21 @@ export default function DashboardPage() {
                 </p>
               </CardContent>
             </Card>
+            <motion.div
+              variants={overlayVariants}
+              className="absolute bottom-2 right-3 text-xs text-muted-foreground pointer-events-none"
+            >
+              Klik untuk melihat detail
+            </motion.div>
           </motion.div>
         </Link>
         <Link href="/dashboard/products">
-          <motion.div {...cardAnimation}>
+          <motion.div 
+            className="relative"
+            initial="hidden"
+            whileHover="visible"
+            {...cardAnimation}
+          >
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Sisa Stok Creampuff</CardTitle>
@@ -141,10 +173,21 @@ export default function DashboardPage() {
                   </p>
                 </CardContent>
               </Card>
+              <motion.div
+                variants={overlayVariants}
+                className="absolute bottom-2 right-3 text-xs text-muted-foreground pointer-events-none"
+              >
+                Klik untuk melihat detail
+              </motion.div>
           </motion.div>
         </Link>
         <Link href="/dashboard/products">
-          <motion.div {...cardAnimation}>
+          <motion.div
+            className="relative"
+            initial="hidden"
+            whileHover="visible"
+            {...cardAnimation}
+          >
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Stok Produk Lainnya</CardTitle>
@@ -157,10 +200,21 @@ export default function DashboardPage() {
                 </p>
               </CardContent>
             </Card>
+            <motion.div
+              variants={overlayVariants}
+              className="absolute bottom-2 right-3 text-xs text-muted-foreground pointer-events-none"
+            >
+              Klik untuk melihat detail
+            </motion.div>
           </motion.div>
         </Link>
         <Link href="/dashboard/products">
-          <motion.div {...cardAnimation}>
+          <motion.div
+            className="relative"
+            initial="hidden"
+            whileHover="visible"
+            {...cardAnimation}
+          >
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Sisa Stok Produk Lainnya</CardTitle>
@@ -173,10 +227,21 @@ export default function DashboardPage() {
                 </p>
               </CardContent>
             </Card>
+            <motion.div
+              variants={overlayVariants}
+              className="absolute bottom-2 right-3 text-xs text-muted-foreground pointer-events-none"
+            >
+              Klik untuk melihat detail
+            </motion.div>
           </motion.div>
         </Link>
         <Link href="/dashboard/products">
-          <motion.div {...cardAnimation}>
+          <motion.div
+            className="relative"
+            initial="hidden"
+            whileHover="visible"
+            {...cardAnimation}
+          >
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Produk Terlaris</CardTitle>
@@ -189,6 +254,12 @@ export default function DashboardPage() {
                 </p>
               </CardContent>
             </Card>
+            <motion.div
+              variants={overlayVariants}
+              className="absolute bottom-2 right-3 text-xs text-muted-foreground pointer-events-none"
+            >
+              Klik untuk melihat detail
+            </motion.div>
           </motion.div>
         </Link>
       </div>

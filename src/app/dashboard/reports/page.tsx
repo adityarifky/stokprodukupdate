@@ -16,17 +16,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Calendar as CalendarIcon, ArrowUp, ArrowDown } from 'lucide-react';
+import { FileText, Calendar as CalendarIcon, ArrowUp, ArrowDown, Upload } from 'lucide-react';
 import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import type { DateRange } from "react-day-picker";
 import { format, startOfDay, endOfDay, startOfMonth, endOfMonth } from "date-fns";
 import { id } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { CSVLink } from "react-csv";
 
 interface ReportData {
     productName: string;
@@ -97,6 +98,20 @@ export default function ReportsPage() {
     const handleDateSelect = (range: DateRange | undefined) => {
         setDateRange(range);
     };
+    
+    const csvHeaders = [
+        { label: "Produk", key: "productName" },
+        { label: "Stok Masuk", key: "totalAdded" },
+        { label: "Stok Keluar", key: "totalSubtracted" },
+        { label: "Perubahan Bersih", key: "netChange" },
+    ];
+
+    const getCsvFilename = () => {
+        if (!dateRange?.from) return "laporan-stok.csv";
+        const fromDate = format(dateRange.from, "yyyy-MM-dd");
+        const toDate = dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : fromDate;
+        return `laporan-stok_${fromDate}_sampai_${toDate}.csv`;
+    };
 
     return (
         <main className="p-4 sm:px-6 md:p-8">
@@ -112,42 +127,58 @@ export default function ReportsPage() {
                                 Analisis penambahan dan pengurangan stok produk dalam rentang waktu tertentu.
                             </CardDescription>
                         </div>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    id="date"
-                                    variant={"outline"}
-                                    className={cn(
-                                        "w-full sm:w-[260px] justify-start text-left font-normal",
-                                        !dateRange && "text-muted-foreground"
-                                    )}
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {dateRange?.from ? (
-                                        dateRange.to ? (
-                                            <>
-                                                {format(dateRange.from, "d LLL y", { locale: id })} - {format(dateRange.to, "d LLL y", { locale: id })}
-                                            </>
+                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        id="date"
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-full sm:w-[260px] justify-start text-left font-normal",
+                                            !dateRange && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {dateRange?.from ? (
+                                            dateRange.to ? (
+                                                <>
+                                                    {format(dateRange.from, "d LLL y", { locale: id })} - {format(dateRange.to, "d LLL y", { locale: id })}
+                                                </>
+                                            ) : (
+                                                format(dateRange.from, "d LLL y", { locale: id })
+                                            )
                                         ) : (
-                                            format(dateRange.from, "d LLL y", { locale: id })
-                                        )
-                                    ) : (
-                                        <span>Pilih tanggal</span>
-                                    )}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="end">
-                                <Calendar
-                                    initialFocus
-                                    mode="range"
-                                    defaultMonth={dateRange?.from}
-                                    selected={dateRange}
-                                    onSelect={handleDateSelect}
-                                    numberOfMonths={2}
-                                    locale={id}
-                                />
-                            </PopoverContent>
-                        </Popover>
+                                            <span>Pilih tanggal</span>
+                                        )}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="end">
+                                    <Calendar
+                                        initialFocus
+                                        mode="range"
+                                        defaultMonth={dateRange?.from}
+                                        selected={dateRange}
+                                        onSelect={handleDateSelect}
+                                        numberOfMonths={2}
+                                        locale={id}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                            <CSVLink
+                                data={reportData}
+                                headers={csvHeaders}
+                                filename={getCsvFilename()}
+                                className={cn(
+                                    buttonVariants({ variant: "outline" }),
+                                    (isLoading || reportData.length === 0) && "pointer-events-none opacity-50"
+                                )}
+                                target="_blank"
+                                aria-disabled={isLoading || reportData.length === 0}
+                            >
+                                <Upload className="mr-2 h-4 w-4" />
+                                <span>Export CSV</span>
+                            </CSVLink>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>

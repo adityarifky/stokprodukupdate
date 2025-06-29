@@ -42,6 +42,7 @@ export function UserNav() {
   const [tempName, setTempName] = React.useState(name);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [greeting, setGreeting] = React.useState("");
+  const [isGreetingVisible, setIsGreetingVisible] = React.useState(true);
 
   const selectRandomGreeting = React.useCallback(() => {
     setGreeting((currentGreeting) => {
@@ -55,9 +56,14 @@ export function UserNav() {
 
   React.useEffect(() => {
     selectRandomGreeting();
-    const intervalId = setInterval(selectRandomGreeting, 3000);
-    return () => clearInterval(intervalId);
   }, [selectRandomGreeting]);
+
+  React.useEffect(() => {
+    const intervalId = setInterval(() => {
+      setIsGreetingVisible(prev => !prev);
+    }, 3000);
+    return () => clearInterval(intervalId);
+  }, []);
 
   const handleProfileSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -74,18 +80,20 @@ export function UserNav() {
 
   return (
     <div className="flex items-center gap-4">
-      <div className="hidden md:block">
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={greeting}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ ease: "easeInOut", duration: 0.5 }}
-            className="text-sm text-muted-foreground font-medium"
-          >
-            {greeting}
-          </motion.p>
+      <div className="hidden md:block h-5">
+        <AnimatePresence>
+          {isGreetingVisible && (
+            <motion.p
+              key={greeting}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ ease: "easeInOut", duration: 1.5 }}
+              className="text-sm text-muted-foreground font-medium"
+            >
+              {greeting}
+            </motion.p>
+          )}
         </AnimatePresence>
       </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -15,8 +15,8 @@ export default function DashboardLayout({
           <Image
             src="/Logo Dreampuff.png"
             alt="Dreampuff Logo"
-            width={128}
-            height={32}
+            width={192}
+            height={48}
             priority
           />
         </Link>

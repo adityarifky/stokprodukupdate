@@ -94,7 +94,7 @@ export function ProductList() {
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle>Produk</CardTitle>
+                        <CardTitle>Produk Satuan</CardTitle>
                         <CardDescription>
                             Kelola produk Anda dan lihat inventarisnya.
                         </CardDescription>

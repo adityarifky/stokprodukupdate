@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ShieldAlert } from "lucide-react";
 
 interface Activity {
     id: string;
@@ -39,8 +40,17 @@ interface UserData {
 export default function UserActivityPage() {
   const [userActivity, setUserActivity] = useState<Activity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userPosition, setUserPosition] = useState<string | null>(null);
 
   useEffect(() => {
+      const position = localStorage.getItem("userPosition");
+      setUserPosition(position);
+
+      if (position !== 'Management') {
+          setIsLoading(false);
+          return;
+      }
+
       const fetchActivity = async () => {
           if (!db) {
               setIsLoading(false);
@@ -87,6 +97,29 @@ export default function UserActivityPage() {
 
       fetchActivity();
   }, []);
+
+  if (userPosition && userPosition !== 'Management') {
+    return (
+        <main className="p-4 sm:px-6 md:p-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <ShieldAlert className="h-6 w-6 text-destructive" />
+                        Akses Ditolak
+                    </CardTitle>
+                    <CardDescription>
+                        Anda tidak memiliki izin untuk melihat halaman ini.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                        Hanya pengguna dengan posisi 'Management' yang dapat mengakses riwayat aktivitas login. Silakan hubungi admin jika Anda merasa ini adalah sebuah kesalahan.
+                    </p>
+                </CardContent>
+            </Card>
+        </main>
+    );
+  }
 
   return (
     <main className="p-4 sm:px-6 md:p-8">

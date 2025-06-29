@@ -83,8 +83,8 @@ export function AddProductForm() {
             let imageUrl = '';
             let aiHint = '';
             
-            if (values.image) {
-                const file = values.image as File;
+            if (values.image instanceof File) {
+                const file = values.image;
                 aiHint = file.name.split('.')[0].replace(/[-_]/g, ' ').substring(0, 50);
                 const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
                 await uploadBytes(storageRef, file);
@@ -225,7 +225,7 @@ export function AddProductForm() {
                 </div>
 
                 <div className="flex justify-end gap-2 pt-4">
-                    <Button type="button" variant="outline" onClick={() => router.push('/dashboard/products')}>
+                    <Button type="button" variant="outline" onClick={() => router.back()}>
                         Batal
                     </Button>
                     <Button type="submit" disabled={isLoading}>

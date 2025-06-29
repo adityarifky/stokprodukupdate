@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Overview } from "@/components/dashboard/overview";
 import { ProductStockTable } from "@/components/dashboard/product-stock-table";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const [currentDate, setCurrentDate] = useState("");
@@ -35,39 +36,28 @@ export default function DashboardPage() {
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-        <motion.div {...cardAnimation}>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Produk Terdaftar</CardTitle>
-              <CakeSlice className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">6</div>
-              <p className="text-xs text-muted-foreground">
-                {currentDate || "Memuat tanggal..."}
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-        <motion.div {...cardAnimation}>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Stok Creampuff</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">127</div>
-              <p className="text-xs text-muted-foreground">
-                {currentDate || "Memuat tanggal..."}
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-        <motion.div {...cardAnimation}>
+        <Link href="/dashboard/sales-details">
+          <motion.div {...cardAnimation}>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Sisa Stok Creampuff</CardTitle>
-                <PackageCheck className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Total Produk Terdaftar</CardTitle>
+                <CakeSlice className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">6</div>
+                <p className="text-xs text-muted-foreground">
+                  {currentDate || "Memuat tanggal..."}
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </Link>
+        <Link href="/dashboard/sales-details">
+          <motion.div {...cardAnimation}>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Stok Creampuff</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">127</div>
@@ -76,49 +66,72 @@ export default function DashboardPage() {
                 </p>
               </CardContent>
             </Card>
-        </motion.div>
-        <motion.div {...cardAnimation}>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Stok Produk Lainnya</CardTitle>
-              <Boxes className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">34</div>
-              <p className="text-xs text-muted-foreground">
-                {currentDate || "Memuat tanggal..."}
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-        <motion.div {...cardAnimation}>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Sisa Stok Produk Lainnya</CardTitle>
-              <PackageMinus className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">12</div>
-              <p className="text-xs text-muted-foreground">
-                {currentDate || "Memuat tanggal..."}
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-        <motion.div {...cardAnimation}>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Produk Terlaris</CardTitle>
-              <Trophy className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg font-bold">Velvet Red Cake</div>
-              <p className="text-xs text-muted-foreground">
-                {currentDate || "Memuat tanggal..."}
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
+          </motion.div>
+        </Link>
+        <Link href="/dashboard/sales-details">
+          <motion.div {...cardAnimation}>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Sisa Stok Creampuff</CardTitle>
+                  <PackageCheck className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">127</div>
+                  <p className="text-xs text-muted-foreground">
+                    {currentDate || "Memuat tanggal..."}
+                  </p>
+                </CardContent>
+              </Card>
+          </motion.div>
+        </Link>
+        <Link href="/dashboard/sales-details">
+          <motion.div {...cardAnimation}>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Stok Produk Lainnya</CardTitle>
+                <Boxes className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">34</div>
+                <p className="text-xs text-muted-foreground">
+                  {currentDate || "Memuat tanggal..."}
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </Link>
+        <Link href="/dashboard/sales-details">
+          <motion.div {...cardAnimation}>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Sisa Stok Produk Lainnya</CardTitle>
+                <PackageMinus className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">12</div>
+                <p className="text-xs text-muted-foreground">
+                  {currentDate || "Memuat tanggal..."}
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </Link>
+        <Link href="/dashboard/sales-details">
+          <motion.div {...cardAnimation}>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Produk Terlaris</CardTitle>
+                <Trophy className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-lg font-bold">Velvet Red Cake</div>
+                <p className="text-xs text-muted-foreground">
+                  {currentDate || "Memuat tanggal..."}
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </Link>
       </div>
       <div className="grid grid-cols-1 gap-4 md:gap-8 lg:grid-cols-3">
         <Card className="lg:col-span-2">

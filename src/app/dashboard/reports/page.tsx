@@ -154,7 +154,7 @@ export default function ReportsPage() {
         <main className="p-4 sm:px-6 md:p-8">
             <Card>
                 <CardHeader>
-                    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                         <div className="flex-1">
                             <div className="flex items-center gap-2">
                                 <FileText className="h-6 w-6" />

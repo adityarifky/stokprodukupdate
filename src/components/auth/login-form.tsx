@@ -58,50 +58,47 @@ export function LoginForm() {
       const userCredential: UserCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 
+      let ipAddress = 'N/A';
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        ipAddress = data.ip || 'N/A';
+      } catch (ipError) {
+        console.error("Gagal mengambil IP:", ipError);
+      }
+
       const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists()) {
+        const userData = userDoc.data();
         await updateDoc(userDocRef, {
           status: 'online',
           lastLogin: serverTimestamp()
         });
 
-        const userData = userDoc.data();
         localStorage.setItem('userName', userData.name || "");
         localStorage.setItem('userPosition', userData.position || "");
         localStorage.setItem('avatarUrl', userData.avatarUrl || "");
         localStorage.setItem('profileSetupComplete', 'true');
       
-        try {
-          const response = await fetch('https://api.ipify.org?format=json');
-          const data = await response.json();
-          const ipAddress = data.ip || 'N/A';
+        await addDoc(collection(db, "user-activity"), {
+            userId: user.uid,
+            name: userData.name,
+            position: userData.position,
+            loginTime: serverTimestamp(),
+            ip: ipAddress,
+            avatar: userData.avatarUrl || ''
+        });
 
-          await addDoc(collection(db, "user-activity"), {
-              userId: user.uid,
-              name: userData.name,
-              position: userData.position,
-              loginTime: serverTimestamp(),
-              ip: ipAddress,
-              avatar: userData.avatarUrl || ''
-          });
-        } catch (ipError) {
-            console.error("Gagal mengambil IP atau mencatat aktivitas:", ipError);
-            await addDoc(collection(db, "user-activity"), {
-              userId: user.uid,
-              name: userData.name,
-              position: userData.position,
-              loginTime: serverTimestamp(),
-              ip: 'N/A',
-              avatar: userData.avatarUrl || ''
-            });
-        }
       } else {
         localStorage.removeItem('userName');
         localStorage.removeItem('userPosition');
         localStorage.removeItem('avatarUrl');
         localStorage.setItem('profileSetupComplete', 'false');
+
+        // Store login info for activity logging after profile setup
+        sessionStorage.setItem('pendingActivityLog', JSON.stringify({ ip: ipAddress }));
       }
       
       router.push("/dashboard");

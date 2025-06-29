@@ -24,7 +24,7 @@ import {
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { User, Briefcase } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, addDoc, collection } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
@@ -66,12 +66,27 @@ export function ProfileSetupForm({ onComplete }: { onComplete: () => void }) {
         avatarUrl: localStorage.getItem('avatarUrl') || '',
         status: "online",
         createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp(),
       }, { merge: true });
 
       localStorage.setItem('userName', values.name);
       localStorage.setItem('userPosition', values.position);
       localStorage.setItem('profileSetupComplete', 'true');
       
+      const pendingActivity = sessionStorage.getItem('pendingActivityLog');
+      if (pendingActivity) {
+        const { ip } = JSON.parse(pendingActivity);
+        await addDoc(collection(db, "user-activity"), {
+          userId: auth.currentUser.uid,
+          name: values.name,
+          position: values.position,
+          loginTime: serverTimestamp(),
+          ip: ip,
+          avatar: localStorage.getItem('avatarUrl') || ''
+        });
+        sessionStorage.removeItem('pendingActivityLog');
+      }
+
       onComplete();
     } catch (error) {
       console.error("Gagal menyimpan profil:", error);

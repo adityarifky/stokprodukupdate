@@ -24,7 +24,7 @@ export default function LoginPage() {
         </div>
         <LoginForm />
         <p className="mt-8 text-center text-xs text-muted-foreground">
-          {year ? `© ${year} Dreampuff. Semua Hak Dilindungi.` : `\u00A0`}
+          {year ? `© ${year} Dreampuff. Hak Untuk Karyawan` : `\u00A0`}
         </p>
       </div>
     </main>

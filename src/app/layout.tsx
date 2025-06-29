@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'Wawasan SweetStock',
+  title: 'Dreampuff',
   description: 'Manajemen inventaris untuk toko makanan penutup Anda.',
 };
 

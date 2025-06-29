@@ -30,7 +30,7 @@ export function DashboardSidebar() {
                 <CakeSlice className="h-5 w-5" />
             </div>
             <div className="flex flex-col">
-              <h2 className="font-headline text-lg font-semibold tracking-tight">SweetStock</h2>
+              <h2 className="font-headline text-lg font-semibold tracking-tight">Dreampuff</h2>
             </div>
         </div>
       </SidebarHeader>

@@ -18,14 +18,14 @@ export default function LoginPage() {
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-4 flex items-center gap-3">
             <Image
-              src="/logo.png"
-              alt="Logo Wawasan SweetStock"
-              width={50}
-              height={50}
+              src="/dreampuff-logo.png"
+              alt="Logo Dreampuff"
+              width={80}
+              height={80}
               className="object-contain"
             />
             <h1 className="font-headline text-4xl font-bold tracking-tight text-primary">
-              Wawasan SweetStock
+              Dreampuff
             </h1>
           </div>
           <p className="max-w-xs text-muted-foreground">
@@ -34,7 +34,7 @@ export default function LoginPage() {
         </div>
         <LoginForm />
         <p className="mt-8 text-center text-xs text-muted-foreground">
-          {year ? `© ${year} Wawasan SweetStock. Semua Hak Dilindungi.` : `\u00A0`}
+          {year ? `© ${year} Dreampuff. Semua Hak Dilindungi.` : `\u00A0`}
         </p>
       </div>
     </main>

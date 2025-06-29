@@ -42,10 +42,8 @@ const greetings = [
   "Hai Cantik! 😉",
 ];
 
-export function UserNav() {
+export function UserNav({ name, position }: { name?: string, position?: string }) {
   const router = useRouter();
-  const [name, setName] = React.useState("");
-  const [position, setPosition] = React.useState("");
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [greeting, setGreeting] = React.useState("");
   const [isGreetingVisible, setIsGreetingVisible] = React.useState(true);
@@ -72,11 +70,7 @@ export function UserNav() {
   }, []);
 
   React.useEffect(() => {
-    const storedName = localStorage.getItem("userName");
-    const storedPosition = localStorage.getItem("userPosition");
     const storedAvatar = localStorage.getItem("avatarUrl");
-    if (storedName) setName(storedName);
-    if (storedPosition) setPosition(storedPosition);
     if (storedAvatar) setAvatarUrl(storedAvatar);
     selectRandomGreeting();
   }, [selectRandomGreeting]);

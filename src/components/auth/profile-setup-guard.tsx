@@ -8,11 +8,12 @@ import { Skeleton } from "../ui/skeleton";
 import { ProfileSetupForm } from "./profile-setup-form";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export function ProfileSetupGuard({ children }: { children: React.ReactNode }) {
+export function ProfileSetupGuard({ children, onProfileComplete }: { children: React.ReactNode; onProfileComplete: () => void; }) {
   const router = useRouter();
   const [status, setStatus] = useState<'loading' | 'unauthenticated' | 'incomplete' | 'complete'>('loading');
 
   const handleProfileSetupComplete = () => {
+    onProfileComplete();
     setStatus('complete');
   };
 

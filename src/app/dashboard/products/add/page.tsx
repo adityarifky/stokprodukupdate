@@ -27,7 +27,7 @@ export default function UpdateStockPage() {
                 </div>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Penyesuaian Inventaris</CardTitle>
+                        <CardTitle>Sesuaikan Kategori & Produk</CardTitle>
                         <CardDescription>
                             Pilih produk dan masukkan jumlah untuk menambah atau mengurangi stok.
                         </CardDescription>

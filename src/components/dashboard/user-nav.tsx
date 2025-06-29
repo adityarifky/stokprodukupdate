@@ -42,12 +42,11 @@ const greetings = [
   "Hai Cantik! 😉",
 ];
 
-export function UserNav({ name, position }: { name?: string, position?: string }) {
+export function UserNav({ name, position, avatarUrl, onAvatarChange }: { name?: string, position?: string, avatarUrl?: string, onAvatarChange: () => void }) {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [greeting, setGreeting] = React.useState("");
   const [isGreetingVisible, setIsGreetingVisible] = React.useState(true);
-  const [avatarUrl, setAvatarUrl] = React.useState("");
   const [tempAvatarUrl, setTempAvatarUrl] = React.useState(avatarUrl);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isImageViewerOpen, setImageViewerOpen] = React.useState(false);
@@ -70,8 +69,6 @@ export function UserNav({ name, position }: { name?: string, position?: string }
   }, []);
 
   React.useEffect(() => {
-    const storedAvatar = localStorage.getItem("avatarUrl");
-    if (storedAvatar) setAvatarUrl(storedAvatar);
     selectRandomGreeting();
   }, [selectRandomGreeting]);
 
@@ -86,8 +83,10 @@ export function UserNav({ name, position }: { name?: string, position?: string }
 
   const handleProfileSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    setAvatarUrl(tempAvatarUrl);
-    localStorage.setItem('avatarUrl', tempAvatarUrl);
+    if (tempAvatarUrl) {
+      localStorage.setItem('avatarUrl', tempAvatarUrl);
+    }
+    onAvatarChange();
     selectRandomGreeting();
     setIsDialogOpen(false);
   };
@@ -111,7 +110,7 @@ export function UserNav({ name, position }: { name?: string, position?: string }
 
   React.useEffect(() => {
     if (isDialogOpen) {
-      setTempAvatarUrl(avatarUrl);
+      setTempAvatarUrl(avatarUrl || '');
     }
   }, [isDialogOpen, avatarUrl]);
   

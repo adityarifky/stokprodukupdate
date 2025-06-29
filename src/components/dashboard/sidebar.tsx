@@ -15,11 +15,12 @@ import {
   Package,
   BarChart2,
   Settings,
+  User,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { Button } from "../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export function DashboardSidebar() {
+export function DashboardSidebar({ name, position, avatarUrl }: { name?: string; position?: string; avatarUrl?: string; }) {
   const pathname = usePathname();
 
   return (
@@ -60,11 +61,7 @@ export function DashboardSidebar() {
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarContent>
-      <SidebarFooter className="p-2">
-        <SidebarMenu>
-          <SidebarMenuItem>
+            <SidebarMenuItem>
              <Link href="#" passHref>
               <SidebarMenuButton tooltip="Pengaturan">
                 <Settings />
@@ -73,6 +70,22 @@ export function DashboardSidebar() {
             </Link>
           </SidebarMenuItem>
         </SidebarMenu>
+      </SidebarContent>
+      <SidebarFooter className="p-2 border-t border-sidebar-border mt-auto">
+        <div className="flex items-center gap-3 p-1 rounded-md">
+            <Avatar className="h-9 w-9 border">
+                <AvatarImage src={avatarUrl} alt={name} className="object-cover" />
+                <AvatarFallback>
+                    <User className="h-5 w-5" />
+                </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col overflow-hidden transition-all duration-200 group-data-[collapsible=icon]:w-0">
+                <p className="text-sm font-medium leading-none truncate">{name || "Pengguna"}</p>
+                <p className="text-xs leading-none text-muted-foreground truncate">
+                    {position || "Posisi"}
+                </p>
+            </div>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

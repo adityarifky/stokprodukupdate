@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signOut } from "firebase/auth";
+import { signOut, onAuthStateChanged, type User } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, updateDoc, onSnapshot, type Unsubscribe } from "firebase/firestore";
 
@@ -31,45 +31,53 @@ export default function DashboardLayout({
   };
 
   useEffect(() => {
+    // This effect ensures we're listening to the correct user's data in real-time.
+    // It runs when the component mounts and onAuthStateChanged handles subsequent updates.
+    
     // Initial load from local storage to prevent flicker on page refresh.
     handleProfileUpdate();
+    
+    const unsubscribeAuth = onAuthStateChanged(auth, (user: User | null) => {
+      let unsubscribeSnapshot: Unsubscribe | undefined;
 
-    let unsubscribe: Unsubscribe | undefined;
+      if (user && db) {
+        // User is signed in, set up the real-time listener for their profile data.
+        const userRef = doc(db, 'users', user.uid);
+        unsubscribeSnapshot = onSnapshot(userRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            const newName = userData.name || "";
+            const newPosition = userData.position || "";
+            const newStory = userData.story || "";
+            const newAvatar = userData.avatarUrl || "";
 
-    // The auth state is already handled by ProfileSetupGuard,
-    // so we can assume auth.currentUser is available.
-    if (auth.currentUser && db) {
-      const userRef = doc(db, 'users', auth.currentUser.uid);
-      unsubscribe = onSnapshot(userRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const userData = docSnap.data();
-          const newName = userData.name || "";
-          const newPosition = userData.position || "";
-          const newStory = userData.story || "";
-          const newAvatar = userData.avatarUrl || "";
+            // Update state to re-render the UI with the latest data
+            setUserName(newName);
+            setUserPosition(newPosition);
+            setUserStory(newStory);
+            setAvatarUrl(newAvatar);
 
-          // Update state to re-render the UI with the latest data
-          setUserName(newName);
-          setUserPosition(newPosition);
-          setUserStory(newStory);
-          setAvatarUrl(newAvatar);
-
-          // Also update localStorage to keep it in sync for the next initial load.
-          localStorage.setItem('userName', newName);
-          localStorage.setItem('userPosition', newPosition);
-          localStorage.setItem('userStory', newStory);
-          localStorage.setItem('avatarUrl', newAvatar);
-        }
-      });
-    }
-
-    // Cleanup the listener when the component unmounts.
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
+            // Also update localStorage to keep it in sync for the next initial load.
+            localStorage.setItem('userName', newName);
+            localStorage.setItem('userPosition', newPosition);
+            localStorage.setItem('userStory', newStory);
+            localStorage.setItem('avatarUrl', newAvatar);
+          }
+        });
       }
-    };
-  }, []); // Empty dependency array ensures this runs only once on mount.
+
+      // Cleanup function for the snapshot listener.
+      // This will be called when the user logs out or the component unmounts.
+      return () => {
+        if (unsubscribeSnapshot) {
+          unsubscribeSnapshot();
+        }
+      };
+    });
+
+    // Cleanup the auth state listener when the layout component unmounts.
+    return () => unsubscribeAuth();
+  }, []);
   
   const onProfileUpdate = () => {
     const newAvatarUrl = localStorage.getItem("avatarUrl") || "";

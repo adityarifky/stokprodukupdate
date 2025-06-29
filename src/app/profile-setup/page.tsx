@@ -66,9 +66,9 @@ export default function ProfileSetupPage() {
       <div className="relative z-10 w-full max-w-md">
         <Card className="w-full shadow-lg border-2 border-amber-100/50">
           <CardHeader>
-            <CardTitle>Lengkapi Profil Anda</CardTitle>
+            <CardTitle>Absen dulu ya guys</CardTitle>
             <CardDescription>
-              Sebelum melanjutkan, harap berikan nama dan posisi Anda.
+              Sebelum melanjutkan, dimohon untuk berikan nama dan posisi yang sesuai yess.
             </CardDescription>
           </CardHeader>
           <Form {...form}>

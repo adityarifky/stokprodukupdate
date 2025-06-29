@@ -46,6 +46,7 @@ export function UserNav() {
   const [avatarUrl, setAvatarUrl] = React.useState("");
   const [tempAvatarUrl, setTempAvatarUrl] = React.useState(avatarUrl);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [isImageViewerOpen, setImageViewerOpen] = React.useState(false);
 
   const selectRandomGreeting = React.useCallback(() => {
     setGreeting((currentGreeting) => {
@@ -66,7 +67,7 @@ export function UserNav() {
       setIsGreetingVisible(prev => !prev);
     }, 3000);
     return () => clearInterval(intervalId);
-  }, [greeting]);
+  }, []);
 
   const handleProfileSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -117,7 +118,7 @@ export function UserNav() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10 border">
-                <AvatarImage src={avatarUrl} alt="User Avatar" />
+                <AvatarImage src={avatarUrl} alt="User Avatar" className="object-cover" />
                 <AvatarFallback>
                   <span className="sr-only">User</span>
                   <User className="h-5 w-5" />
@@ -162,12 +163,31 @@ export function UserNav() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="flex flex-col items-center gap-4">
-                <Avatar className="h-24 w-24 border">
-                  <AvatarImage src={tempAvatarUrl} alt="User Avatar" />
-                  <AvatarFallback>
-                    <User className="h-12 w-12" />
-                  </AvatarFallback>
-                </Avatar>
+                <Dialog open={isImageViewerOpen} onOpenChange={setImageViewerOpen}>
+                  <DialogTrigger asChild>
+                    <button
+                      type="button"
+                      disabled={!tempAvatarUrl}
+                      className="disabled:cursor-not-allowed rounded-full"
+                    >
+                      <Avatar className="h-24 w-24 border hover:opacity-80 transition-opacity">
+                        <AvatarImage src={tempAvatarUrl} alt="User Avatar" className="object-cover" />
+                        <AvatarFallback>
+                          <User className="h-12 w-12" />
+                        </AvatarFallback>
+                      </Avatar>
+                    </button>
+                  </DialogTrigger>
+                  {tempAvatarUrl && (
+                    <DialogContent className="p-0 border-0 max-w-fit bg-transparent shadow-none">
+                      <img
+                        src={tempAvatarUrl}
+                        alt="Pratinjau Avatar Pengguna"
+                        className="max-w-[80vw] max-h-[80vh] rounded-lg object-contain"
+                      />
+                    </DialogContent>
+                  )}
+                </Dialog>
                 <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
                   Ubah Foto
                 </Button>

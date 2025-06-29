@@ -18,7 +18,7 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10 border">
-            <AvatarImage src="/Logo dreampuff.png" alt="Dreampuff Logo" data-ai-hint="company logo" />
+            <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="user avatar" />
             <AvatarFallback>SD</AvatarFallback>
           </Avatar>
         </Button>

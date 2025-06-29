@@ -7,7 +7,7 @@ import { db } from "@/lib/firebase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditProductForm } from "@/components/dashboard/edit-product-form";
 
@@ -27,9 +27,22 @@ export default function EditProductPage() {
     const [product, setProduct] = useState<Product | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [userPosition, setUserPosition] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!id || typeof id !== 'string') return;
+        const position = localStorage.getItem("userPosition");
+        setUserPosition(position);
+
+        if (position !== 'Management') {
+            setIsLoading(false);
+            return;
+        }
+
+        if (!id || typeof id !== 'string') {
+             setIsLoading(false);
+             setError("ID produk tidak valid.");
+             return;
+        }
 
         const fetchProduct = async () => {
             if (!db) return;
@@ -52,6 +65,8 @@ export default function EditProductPage() {
 
         fetchProduct();
     }, [id]);
+    
+    const isManagement = userPosition === 'Management';
 
     const renderContent = () => {
         if (isLoading) {
@@ -76,6 +91,27 @@ export default function EditProductPage() {
                             <Skeleton className="h-10 w-24" />
                             <Skeleton className="h-10 w-28" />
                         </div>
+                    </CardContent>
+                </Card>
+            );
+        }
+
+        if (!isManagement) {
+             return (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <ShieldAlert className="h-6 w-6 text-destructive" />
+                            Akses Ditolak
+                        </CardTitle>
+                        <CardDescription>
+                            Anda tidak memiliki izin untuk mengakses halaman ini.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                            Hanya pengguna dengan posisi 'Management' yang dapat mengedit produk.
+                        </p>
                     </CardContent>
                 </Card>
             );

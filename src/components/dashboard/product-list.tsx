@@ -40,8 +40,12 @@ export function ProductList() {
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
+    const [userPosition, setUserPosition] = useState<string | null>(null);
 
     useEffect(() => {
+        const position = localStorage.getItem("userPosition");
+        setUserPosition(position);
+
         if (!db) {
             setIsLoading(false);
             return;
@@ -65,10 +69,8 @@ export function ProductList() {
     const handleDeleteProduct = async (product: Product) => {
         if (!db || !storage) return;
         try {
-            // Delete the document from Firestore
             await deleteDoc(doc(db, "products", product.id));
 
-            // Delete the image from Storage, unless it's a placeholder
             if (product.image && !product.image.includes('placehold.co')) {
                 const imageRef = ref(storage, product.image);
                 await deleteObject(imageRef);
@@ -88,6 +90,7 @@ export function ProductList() {
         }
     };
 
+    const isManagement = userPosition === 'Management';
 
     return (
         <Card>
@@ -99,12 +102,14 @@ export function ProductList() {
                             Kelola produk Anda dan lihat tabel dibawah.
                         </CardDescription>
                     </div>
-                    <Button asChild>
-                        <Link href="/dashboard/products/add">
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Tambah Produk
-                        </Link>
-                    </Button>
+                    {isManagement && (
+                        <Button asChild>
+                            <Link href="/dashboard/products/add">
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Tambah Produk
+                            </Link>
+                        </Button>
+                    )}
                 </div>
             </CardHeader>
             <CardContent>
@@ -117,7 +122,7 @@ export function ProductList() {
                             <TableHead>Nama</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Stok</TableHead>
-                            <TableHead className="text-right">Aksi</TableHead>
+                            {isManagement && <TableHead className="text-right">Aksi</TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -130,7 +135,7 @@ export function ProductList() {
                                     <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                                     <TableCell><Skeleton className="h-6 w-20" /></TableCell>
                                     <TableCell className="text-right"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
-                                    <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
+                                    {isManagement && <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>}
                                 </TableRow>
                             ))
                         ) : products.length > 0 ? (
@@ -149,41 +154,43 @@ export function ProductList() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right font-medium">{product.stock}</TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <Button asChild variant="outline" size="icon" className="h-8 w-8">
-                                                <Link href={`/dashboard/products/edit/${product.id}`}>
-                                                    <Edit className="h-4 w-4" />
-                                                    <span className="sr-only">Edit</span>
-                                                </Link>
-                                            </Button>
-                                            <AlertDialog>
-                                                <AlertDialogTrigger asChild>
-                                                    <Button variant="destructive" size="icon" className="h-8 w-8">
-                                                        <Trash2 className="h-4 w-4" />
-                                                        <span className="sr-only">Hapus</span>
-                                                    </Button>
-                                                </AlertDialogTrigger>
-                                                <AlertDialogContent>
-                                                    <AlertDialogHeader>
-                                                        <AlertDialogTitle>Anda yakin?</AlertDialogTitle>
-                                                        <AlertDialogDescription>
-                                                            Tindakan ini tidak dapat dibatalkan. Ini akan menghapus produk secara permanen dari database.
-                                                        </AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter>
-                                                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                                                        <AlertDialogAction onClick={() => handleDeleteProduct(product)}>Hapus</AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                            </AlertDialog>
-                                        </div>
-                                    </TableCell>
+                                    {isManagement && (
+                                        <TableCell className="text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <Button asChild variant="outline" size="icon" className="h-8 w-8">
+                                                    <Link href={`/dashboard/products/edit/${product.id}`}>
+                                                        <Edit className="h-4 w-4" />
+                                                        <span className="sr-only">Edit</span>
+                                                    </Link>
+                                                </Button>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="destructive" size="icon" className="h-8 w-8">
+                                                            <Trash2 className="h-4 w-4" />
+                                                            <span className="sr-only">Hapus</span>
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Anda yakin?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                Tindakan ini tidak dapat dibatalkan. Ini akan menghapus produk secara permanen dari database.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Batal</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => handleDeleteProduct(product)}>Hapus</AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                            </div>
+                                        </TableCell>
+                                    )}
                                 </TableRow>
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center">
+                                <TableCell colSpan={isManagement ? 5 : 4} className="h-24 text-center">
                                     Tidak ada produk untuk ditampilkan.
                                 </TableCell>
                             </TableRow>

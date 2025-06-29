@@ -43,27 +43,24 @@ export function BundleProductTable() {
     const [isLoading, setIsLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingBundle, setEditingBundle] = useState<Bundle | null>(null);
+    const [userPosition, setUserPosition] = useState<string | null>(null);
 
     useEffect(() => {
+        const position = localStorage.getItem("userPosition");
+        setUserPosition(position);
+
         if (!db) return;
-        const q = query(collection(db, "products"), orderBy("name", "asc"));
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const qProducts = query(collection(db, "products"), orderBy("name", "asc"));
+        const unsubscribeProducts = onSnapshot(qProducts, (querySnapshot) => {
             const productsData: Product[] = [];
             querySnapshot.forEach((doc: DocumentData) => {
                 productsData.push({ id: doc.id, ...doc.data() } as Product);
             });
             setProducts(productsData);
         });
-        return () => unsubscribe();
-    }, []);
 
-    useEffect(() => {
-        if (!db) {
-            setIsLoading(false);
-            return;
-        }
-        const q = query(collection(db, "bundles"), orderBy("createdAt", "desc"));
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const qBundles = query(collection(db, "bundles"), orderBy("createdAt", "desc"));
+        const unsubscribeBundles = onSnapshot(qBundles, (querySnapshot) => {
             const bundlesData: Bundle[] = [];
             querySnapshot.forEach((doc: DocumentData) => {
                 bundlesData.push({ id: doc.id, ...doc.data() } as Bundle);
@@ -75,7 +72,10 @@ export function BundleProductTable() {
             setIsLoading(false);
         });
 
-        return () => unsubscribe();
+        return () => {
+            unsubscribeProducts();
+            unsubscribeBundles();
+        };
     }, []);
     
     const handleAddBundle = () => {
@@ -104,6 +104,8 @@ export function BundleProductTable() {
         });
     };
 
+    const isManagement = userPosition === 'Management';
+
     return (
         <>
             <Card>
@@ -115,10 +117,12 @@ export function BundleProductTable() {
                                 Kelola paket produk bundling Anda.
                             </CardDescription>
                         </div>
-                        <Button onClick={handleAddBundle}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Tambah Bundel
-                        </Button>
+                        {isManagement && (
+                            <Button onClick={handleAddBundle}>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Tambah Bundel
+                            </Button>
+                        )}
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -128,7 +132,7 @@ export function BundleProductTable() {
                                 <TableHead>Nama Bundling</TableHead>
                                 <TableHead>Harga</TableHead>
                                 <TableHead>Produk Termasuk</TableHead>
-                                <TableHead className="text-right">Aksi</TableHead>
+                                {isManagement && <TableHead className="text-right">Aksi</TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -138,7 +142,7 @@ export function BundleProductTable() {
                                         <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                                         <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                                         <TableCell><Skeleton className="h-6 w-48" /></TableCell>
-                                        <TableCell className="text-right"><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
+                                        {isManagement && <TableCell className="text-right"><Skeleton className="h-8 w-24 ml-auto" /></TableCell>}
                                     </TableRow>
                                 ))
                             ) : bundles.length > 0 ? (
@@ -153,39 +157,41 @@ export function BundleProductTable() {
                                                 ))}
                                             </div>
                                         </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleEditBundle(bundle)}>
-                                                    <Edit className="h-4 w-4" />
-                                                    <span className="sr-only">Edit</span>
-                                                </Button>
-                                                <AlertDialog>
-                                                    <AlertDialogTrigger asChild>
-                                                        <Button variant="destructive" size="icon" className="h-8 w-8">
-                                                            <Trash2 className="h-4 w-4" />
-                                                            <span className="sr-only">Hapus</span>
-                                                        </Button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>Anda yakin ingin menghapus?</AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                                Tindakan ini tidak dapat dibatalkan. Ini akan menghapus bundel secara permanen.
-                                                            </AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel>Batal</AlertDialogCancel>
-                                                            <AlertDialogAction onClick={() => handleDeleteBundle(bundle.id)}>Hapus</AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
-                                            </div>
-                                        </TableCell>
+                                        {isManagement && (
+                                            <TableCell className="text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleEditBundle(bundle)}>
+                                                        <Edit className="h-4 w-4" />
+                                                        <span className="sr-only">Edit</span>
+                                                    </Button>
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button variant="destructive" size="icon" className="h-8 w-8">
+                                                                <Trash2 className="h-4 w-4" />
+                                                                <span className="sr-only">Hapus</span>
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Anda yakin ingin menghapus?</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    Tindakan ini tidak dapat dibatalkan. Ini akan menghapus bundel secara permanen.
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>Batal</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={() => handleDeleteBundle(bundle.id)}>Hapus</AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </div>
+                                            </TableCell>
+                                        )}
                                     </TableRow>
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={4} className="h-24 text-center">
+                                    <TableCell colSpan={isManagement ? 4 : 3} className="h-24 text-center">
                                         Belum ada bundling yang dibuat.
                                     </TableCell>
                                 </TableRow>

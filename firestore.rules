@@ -1,87 +1,105 @@
 
 rules_version = '2';
 
+// By default, deny all reads and writes.
+// We will explicitly grant access below for security.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // =====================================================================
-    // Helper Functions & Variables (Single Source of Truth)
-    // =====================================================================
+    // HELPER FUNCTIONS =================================
+    // These functions make our rules easier to read and maintain.
 
-    // Fungsi ini adalah jantung keamanan kita.
-    // Ia dengan aman memeriksa apakah pengguna yang sedang login memiliki peran 'Management'.
-    // Kuncinya adalah 'exists(UserDocPath)' yang mencegah error jika dokumen pengguna belum ada.
+    // Is the user signed in?
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Is the user the owner of the document they are trying to access?
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Does the user have the 'Management' role?
+    // This is the SAFE version: it first checks if the user's profile document exists
+    // before trying to read data from it. This prevents errors for new users.
     function isManagement() {
-      let UserDocPath = /databases/$(database)/documents/users/$(request.auth.uid);
-      return request.auth != null && exists(UserDocPath) && get(UserDocPath).data.position == 'Management';
+      let userDocPath = /databases/$(database)/documents/users/$(request.auth.uid);
+      // Check for existence AND the correct role.
+      return isSignedIn() && exists(userDocPath) && get(userDocPath).data.position == 'Management';
     }
 
-    // =====================================================================
-    // Collection-Specific Rules
-    // =====================================================================
 
-    // --- Users Collection: Profil & Peran ---
+    // COLLECTION RULES =================================
+
+    // --- USERS ---
+    // Anyone signed in can see user profiles (for user lists, avatars, etc.).
+    // A user can only create or change their OWN profile.
     match /users/{userId} {
-      // Semua pengguna yang login bisa membaca profil lain (penting untuk daftar pengguna & chat).
-      allow read: if request.auth != null;
-      // Pengguna hanya bisa membuat atau mengubah data mereka sendiri.
-      allow write: if request.auth.uid == userId;
+      allow read: if isSignedIn();
+      allow create, update: if isOwner(userId);
     }
 
-    // --- User Activity Collection (Data Paling Sensitif) ---
-    match /user-activity/{activityId} {
-      // **PERATURAN KUNCI**: Hanya 'Management' yang bisa membaca (get/list) koleksi ini.
-      // Ini adalah aturan yang secara langsung mencegah error `permission-denied`
-      // untuk peran lain saat mereka membuka aplikasi.
-      allow read: if isManagement();
-
-      // Pengguna hanya bisa membuat catatan aktivitas untuk diri mereka sendiri saat login.
-      allow create: if request.auth.uid == request.resource.data.userId;
-    }
-
-    // --- Products & Bundles Collections: Data Bisnis ---
-    match /products/{docId} {
-      allow read: if request.auth != null;
-      allow write: if isManagement(); // Hanya 'Management' yang bisa membuat, mengubah, menghapus.
+    // --- PRODUCTS & BUNDLES ---
+    // Anyone signed in can view products and bundles.
+    // Only 'Management' can add, edit, or delete them.
+    match /products/{productId} {
+      allow read: if isSignedIn();
+      allow write: if isManagement(); // 'write' covers create, update, delete
     }
     match /bundles/{bundleId} {
-      allow read: if request.auth != null;
-      allow write: if isManagement();
+      allow read: if isSignedIn();
+      allow write: if isManagement(); // 'write' covers create, update, delete
     }
 
-    // --- Stock History Collection: Log Umum ---
+    // --- STOCK HISTORY ---
+    // Anyone signed in can read the history and add new entries (when they update stock).
     match /stock_history/{historyId} {
-      // Semua peran bisa menambah stok, jadi semua yang login bisa membuat & membaca riwayat.
-      allow read, create: if request.auth != null;
+      allow read, create: if isSignedIn();
     }
 
-    // --- Announcements Collection & Replies ---
+    // --- ANNOUNCEMENTS ---
+    // Anyone signed in can read announcements and replies.
+    // Anyone signed in can post a reply.
+    // Only 'Management' can post, edit, or delete the main announcement.
     match /announcements/{announcementId} {
-      allow read: if request.auth != null;
-      allow write: if isManagement(); // Hanya 'Management' yang bisa membuat/mengubah/menghapus pengumuman.
+      allow read: if isSignedIn();
+      allow create, update, delete: if isManagement();
 
       match /replies/{replyId} {
-        // Siapa pun yang login bisa membalas pengumuman.
-        allow read, create: if request.auth != null;
+        allow read, create: if isSignedIn();
       }
     }
 
-    // --- Chats Collection: Komunikasi Pribadi ---
+    // --- USER ACTIVITY (Sensitive Data) ---
+    // Only 'Management' can view the activity log of all users.
+    // A user can only create a log entry for their own activity.
+    match /user-activity/{activityId} {
+      allow read: if isManagement();
+      allow create: if isOwner(request.resource.data.userId);
+    }
+    
+    // --- CHATS (Private Data) ---
+    // Logic for private 1-on-1 chats.
     match /chats/{chatId} {
-      // Anda hanya bisa membaca atau mengubah data chat (misal: lastMessageTimestamp) jika Anda adalah peserta.
-      // 'resource.data' merujuk pada dokumen yang sudah ada di database.
-      allow read, update: if request.auth.uid in resource.data.participants;
-      // Anda hanya bisa membuat chat baru jika ID Anda termasuk dalam daftar peserta.
-      // 'request.resource.data' merujuk pada dokumen yang AKAN dibuat.
-      allow create: if request.auth.uid in request.resource.data.participants;
-
+      
+      // To create a chat, the user must be one of the participants in the new document.
+      allow create: if isSignedIn() && request.auth.uid in request.resource.data.participants;
+      
+      // To read or update a chat document (e.g., last message timestamp), the user must be a participant.
+      allow read, update: if isSignedIn() && request.auth.uid in resource.data.participants;
+      
+      // --- MESSAGES Sub-collection ---
       match /messages/{messageId} {
-        // Anda hanya bisa membaca atau mengirim pesan dalam sebuah chat jika Anda adalah pesertanya.
+        // To read messages, the user must be a participant of the parent chat document.
+        // This requires one extra read operation to check the parent.
         function isChatParticipant() {
-          return request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+          return isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
         }
+
         allow read: if isChatParticipant();
-        allow create: if isChatParticipant() && request.auth.uid == request.resource.data.senderId;
+        
+        // To create a message, the user must be a participant AND the sender of the message.
+        allow create: if isChatParticipant() && isOwner(request.resource.data.senderId);
       }
     }
   }

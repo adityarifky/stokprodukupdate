@@ -28,9 +28,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import getCroppedImg from "@/lib/image-utils";
-import { useRouter } from "next/navigation";
-import { signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
 
 const greetings = [
   "Halo Bro! 👋",
@@ -48,16 +45,17 @@ export function UserNav({
   avatarUrl, 
   onAvatarChange,
   isProfileDialogOpen,
-  onProfileDialogOpenChange
+  onProfileDialogOpenChange,
+  onLogout
 }: { 
   name?: string, 
   position?: string, 
   avatarUrl?: string, 
   onAvatarChange: () => void,
   isProfileDialogOpen: boolean,
-  onProfileDialogOpenChange: (open: boolean) => void 
+  onProfileDialogOpenChange: (open: boolean) => void,
+  onLogout: () => void
 }) {
-  const router = useRouter();
   const [greeting, setGreeting] = React.useState("");
   const [isGreetingVisible, setIsGreetingVisible] = React.useState(true);
   const [tempAvatarUrl, setTempAvatarUrl] = React.useState(avatarUrl);
@@ -150,20 +148,6 @@ export function UserNav({
     setIsCropperOpen(false);
   }, [imageToCrop, croppedAreaPixels, rotation]);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      localStorage.removeItem('userName');
-      localStorage.removeItem('userPosition');
-      localStorage.removeItem('profileSetupComplete');
-      localStorage.removeItem('avatarUrl');
-      router.push('/');
-    } catch (error) {
-      console.error("Gagal keluar:", error);
-    }
-  };
-
-
   return (
     <div className="flex items-center gap-4">
       <div className="hidden md:block h-5">
@@ -214,7 +198,7 @@ export function UserNav({
               </DialogTrigger>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuItem onSelect={onLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Keluar</span>
             </DropdownMenuItem>

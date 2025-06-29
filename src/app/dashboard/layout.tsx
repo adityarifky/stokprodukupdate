@@ -6,12 +6,16 @@ import { ProfileSetupGuard } from "@/components/auth/profile-setup-guard";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   const [userName, setUserName] = useState("");
   const [userPosition, setUserPosition] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -30,6 +34,19 @@ export default function DashboardLayout({
   const onAvatarChange = () => {
     setAvatarUrl(localStorage.getItem("avatarUrl") || "");
   }
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userPosition');
+      localStorage.removeItem('profileSetupComplete');
+      localStorage.removeItem('avatarUrl');
+      router.push('/');
+    } catch (error) {
+      console.error("Gagal keluar:", error);
+    }
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -50,12 +67,18 @@ export default function DashboardLayout({
               onAvatarChange={onAvatarChange}
               isProfileDialogOpen={isProfileDialogOpen}
               onProfileDialogOpenChange={setProfileDialogOpen}
+              onLogout={handleLogout}
             />
         </header>
         <main className="flex-1 pb-16">
             <ProfileSetupGuard onProfileComplete={handleProfileUpdate}>{children}</ProfileSetupGuard>
         </main>
-        <BottomNav onProfileClick={() => setProfileDialogOpen(true)} />
+        <BottomNav 
+          name={userName} 
+          position={userPosition} 
+          onProfileClick={() => setProfileDialogOpen(true)} 
+          onLogout={handleLogout} 
+        />
     </div>
   );
 }

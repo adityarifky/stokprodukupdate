@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from '@/components/ui/skeleton';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, where, DocumentData, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, DocumentData } from 'firebase/firestore';
 import { ArrowLeft } from 'lucide-react';
 
 interface Product {
@@ -49,8 +49,7 @@ export default function CategoryDetailPage() {
 
         const q = query(
             collection(db, "products"), 
-            where("category", "==", categoryName),
-            orderBy("name", "asc")
+            where("category", "==", categoryName)
         );
         
         const unsubscribe = onSnapshot(q, (querySnapshot) => {

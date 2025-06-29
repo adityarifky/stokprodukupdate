@@ -33,6 +33,13 @@ interface StockData {
 export default function DashboardPage() {
     const [stockData, setStockData] = useState<StockData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [currentDate, setCurrentDate] = useState<string>('');
+
+    useEffect(() => {
+        const today = new Date();
+        const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+        setCurrentDate(today.toLocaleDateString('id-ID', options));
+    }, []);
 
     useEffect(() => {
         if (!db) {
@@ -92,7 +99,7 @@ export default function DashboardPage() {
                   <CardContent>
                     {renderStockCount(category.name)}
                     <p className="text-xs text-muted-foreground">
-                        Total stok tersedia.
+                        {currentDate || '\u00A0'}
                     </p>
                   </CardContent>
                   <motion.div

@@ -91,7 +91,7 @@ export function UpdateStockForm() {
     }, []);
 
     const filteredProducts = React.useMemo(() => {
-        if (!selectedCategory) {
+        if (!selectedCategory || selectedCategory === 'all') {
             return products;
         }
         return products.filter(p => p.category === selectedCategory);
@@ -183,7 +183,7 @@ export function UpdateStockForm() {
                             </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                            <SelectItem value="">Semua Kategori</SelectItem>
+                            <SelectItem value="all">Semua Kategori</SelectItem>
                             {categories.map((category) => (
                                 <SelectItem key={category} value={category}>
                                     {category}

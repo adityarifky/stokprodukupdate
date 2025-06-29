@@ -26,6 +26,13 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
 import { Label } from "../ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const formSchema = z.object({
   productId: z.string({ required_error: "Anda harus memilih produk." }),
@@ -37,6 +44,7 @@ interface Product {
     id: string;
     name: string;
     stock: number;
+    category: string;
 }
 
 export function UpdateStockForm() {
@@ -45,6 +53,9 @@ export function UpdateStockForm() {
     const [isLoading, setIsLoading] = React.useState(false);
     const [products, setProducts] = React.useState<Product[]>([]);
     const [isProductListLoading, setIsProductListLoading] = React.useState(true);
+    const [categories, setCategories] = React.useState<string[]>([]);
+    const [selectedCategory, setSelectedCategory] = React.useState<string>("");
+    const [isProductPopoverOpen, setIsProductPopoverOpen] = React.useState(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -66,6 +77,10 @@ export function UpdateStockForm() {
                 productsData.push({ id: doc.id, ...doc.data() } as Product);
             });
             setProducts(productsData);
+            
+            const uniqueCategories = [...new Set(productsData.map(p => p.category))].sort();
+            setCategories(uniqueCategories);
+
             setIsProductListLoading(false);
         }, (error) => {
             console.error("Error fetching products:", error);
@@ -74,6 +89,18 @@ export function UpdateStockForm() {
 
         return () => unsubscribe();
     }, []);
+
+    const filteredProducts = React.useMemo(() => {
+        if (!selectedCategory) {
+            return products;
+        }
+        return products.filter(p => p.category === selectedCategory);
+    }, [products, selectedCategory]);
+
+    const handleCategoryChange = (value: string) => {
+        setSelectedCategory(value);
+        form.resetField("productId", { defaultValue: undefined });
+    };
     
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true);
@@ -133,6 +160,7 @@ export function UpdateStockForm() {
         return (
             <div className="space-y-8">
                 <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-20 w-full" />
                 <Skeleton className="h-10 w-full" />
                 <div className="flex justify-end gap-2 pt-4">
@@ -146,13 +174,35 @@ export function UpdateStockForm() {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <FormItem>
+                    <FormLabel>Filter Kategori</FormLabel>
+                     <Select onValueChange={handleCategoryChange} value={selectedCategory}>
+                        <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Pilih kategori untuk memfilter..." />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="">Semua Kategori</SelectItem>
+                            {categories.map((category) => (
+                                <SelectItem key={category} value={category}>
+                                    {category}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <FormDescription>
+                        Pilih kategori untuk mempermudah pencarian produk.
+                    </FormDescription>
+                </FormItem>
+
                 <FormField
                     control={form.control}
                     name="productId"
                     render={({ field }) => (
                         <FormItem className="flex flex-col">
                             <FormLabel>Pilih Produk</FormLabel>
-                            <Popover>
+                            <Popover open={isProductPopoverOpen} onOpenChange={setIsProductPopoverOpen}>
                                 <PopoverTrigger asChild>
                                     <FormControl>
                                         <Button
@@ -164,7 +214,7 @@ export function UpdateStockForm() {
                                             )}
                                         >
                                             {field.value
-                                                ? products.find((p) => p.id === field.value)?.name
+                                                ? filteredProducts.find((p) => p.id === field.value)?.name
                                                 : "Pilih produk..."}
                                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                         </Button>
@@ -176,12 +226,13 @@ export function UpdateStockForm() {
                                         <CommandList>
                                             <CommandEmpty>Produk tidak ditemukan.</CommandEmpty>
                                             <CommandGroup>
-                                                {products.map((product) => (
+                                                {filteredProducts.map((product) => (
                                                     <CommandItem
                                                         value={product.name}
                                                         key={product.id}
                                                         onSelect={() => {
                                                             form.setValue("productId", product.id);
+                                                            setIsProductPopoverOpen(false);
                                                         }}
                                                     >
                                                         <Check

@@ -10,6 +10,7 @@ import {
   FileUp,
   FileClock,
   Megaphone,
+  FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -19,8 +20,9 @@ const navItems = [
   { href: '/dashboard/update-stock', label: 'Update', icon: FileUp },
   { href: '/dashboard/stock-history', label: 'Riwayat', icon: FileClock },
   { href: '/dashboard/announcements', label: 'Pengumuman', icon: Megaphone },
-  { href: '/dashboard/user-activity', label: 'Aktivitas', icon: History },
   { href: '/dashboard/users', label: 'Pengguna', icon: Users },
+  { href: '/dashboard/user-activity', label: 'Aktivitas', icon: History },
+  { href: '/dashboard/reports', label: 'Laporan', icon: FileText },
 ];
 
 export function BottomNav({
@@ -34,7 +36,7 @@ export function BottomNav({
 
   return (
     <footer className="fixed bottom-0 z-40 w-full border-t bg-background/95 backdrop-blur-sm">
-      <nav className="grid h-16 grid-cols-7 items-center justify-around px-2">
+      <nav className="grid h-16 grid-cols-8 items-center justify-around px-2">
         {navItems.map((item) => (
           <Link
             key={item.label}

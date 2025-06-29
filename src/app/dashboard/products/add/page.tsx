@@ -11,38 +11,13 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
-import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { onAuthStateChanged, type User } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function AddNewProductPage() {
-    const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
+    const { isManagement, loading } = useAuth();
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
-            if (user && db) {
-                try {
-                    const userRef = doc(db, 'users', user.uid);
-                    const userSnap = await getDoc(userRef);
-                    if (userSnap.exists() && userSnap.data().position === 'Management') {
-                        setIsAllowed(true);
-                    } else {
-                        setIsAllowed(false);
-                    }
-                } catch {
-                    setIsAllowed(false);
-                }
-            } else {
-                setIsAllowed(false);
-            }
-        });
-
-        return () => unsubscribe();
-    }, []);
-
-    if (isAllowed === null) {
+    if (loading) {
         return (
             <main className="p-4 sm:px-6 md:p-8">
                 <div className="max-w-3xl mx-auto">
@@ -52,7 +27,7 @@ export default function AddNewProductPage() {
         );
     }
 
-    if (isAllowed === false) {
+    if (!isManagement) {
         return (
             <main className="p-4 sm:px-6 md:p-8">
                 <Card>

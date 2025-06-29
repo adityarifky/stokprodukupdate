@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from "react";
@@ -18,11 +17,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { auth, db } from "@/lib/firebase";
-import { collection, getDocs, query, orderBy, Timestamp, doc, getDoc, onSnapshot, Unsubscribe } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { collection, query, orderBy, Timestamp, onSnapshot, Unsubscribe } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShieldAlert } from "lucide-react";
-import { onAuthStateChanged, type User } from "firebase/auth";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Activity {
     id: string;
@@ -33,109 +32,39 @@ interface Activity {
     avatar: string;
 }
 
-interface UserData {
-    name: string;
-    position: string;
-    avatar: string;
-}
+function ActivityTable() {
+    const [userActivity, setUserActivity] = useState<Activity[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-export default function UserActivityPage() {
-  const [userActivity, setUserActivity] = useState<Activity[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, async (user: User | null) => {
-      if (user && db) {
-        try {
-          const userRef = doc(db, 'users', user.uid);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists() && userSnap.data().position === 'Management') {
-            setIsAllowed(true);
-          } else {
-            setIsAllowed(false);
-          }
-        } catch (error) {
-          console.error("Error checking user permissions:", error);
-          setIsAllowed(false);
-        }
-      } else {
-        setIsAllowed(false);
-      }
-    });
-
-    return () => unsubscribeAuth();
-  }, []);
-
-  useEffect(() => {
-    let unsubscribeActivities: Unsubscribe | undefined;
-    
-    // Only fetch data if user is allowed
-    if (isAllowed === true) {
-      const fetchActivities = async () => {
-        if (!db) return;
-        
-        // First, get all user data to map userId to user details
-        const usersQuery = query(collection(db, "users"));
-        const usersSnapshot = await getDocs(usersQuery);
-        const usersMap = new Map<string, UserData>();
-        usersSnapshot.forEach(doc => {
-            const data = doc.data();
-            usersMap.set(doc.id, {
-            name: data.name || 'N/A',
-            position: data.position || 'N/A',
-            avatar: data.avatarUrl || '',
-            });
-        });
-
-        // Now, set up the listener for activities
+    useEffect(() => {
         const activityQuery = query(collection(db, "user-activity"), orderBy("loginTime", "desc"));
-        unsubscribeActivities = onSnapshot(activityQuery, (activitySnapshot) => {
+        const unsubscribe = onSnapshot(activityQuery, (activitySnapshot) => {
             const activities = activitySnapshot.docs.map(doc => {
                 const data = doc.data();
                 const loginTime = data.loginTime as Timestamp;
-                const userDetails = usersMap.get(data.userId) || { name: data.name || 'Pengguna Tidak Dikenal', position: data.position || 'N/A', avatar: data.avatar || '' };
-
                 return {
                     id: doc.id,
-                    name: userDetails.name,
-                    position: userDetails.position,
+                    name: data.name || 'Pengguna Tidak Dikenal',
+                    position: data.position || 'N/A',
                     loginTime: loginTime ? new Date(loginTime.seconds * 1000).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' }) : 'N/A',
                     ip: data.ip || 'N/A',
-                    avatar: userDetails.avatar,
+                    avatar: data.avatar || '',
                 };
             });
             setUserActivity(activities);
             setIsLoading(false);
         }, (error) => {
+            // This error is now less likely because the component is guarded.
+            // However, it's good practice to keep it.
             console.error("Snapshot listener error on user-activity:", error);
             setIsLoading(false);
         });
-      };
-      
-      fetchActivities();
+        
+        return () => unsubscribe();
+    }, []);
 
-    } else if (isAllowed === false) {
-      // If not allowed, stop loading and show the appropriate message
-      setIsLoading(false);
-    }
-
-    return () => {
-      if (unsubscribeActivities) {
-        unsubscribeActivities();
-      }
-    };
-  }, [isAllowed]);
-
-  if (isLoading || isAllowed === null) {
-    return (
-      <main className="p-4 sm:px-6 md:p-8">
-        <Card>
-          <CardHeader>
-            <CardTitle><Skeleton className="h-7 w-48" /></CardTitle>
-            <CardDescription><Skeleton className="h-4 w-72" /></CardDescription>
-          </CardHeader>
-          <CardContent>
+    if (isLoading) {
+        return (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -161,46 +90,11 @@ export default function UserActivityPage() {
                 ))}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-      </main>
-    );
-  }
+        )
+    }
 
-  if (isAllowed === false) {
     return (
-        <main className="p-4 sm:px-6 md:p-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <ShieldAlert className="h-6 w-6 text-destructive" />
-                        Akses Ditolak
-                    </CardTitle>
-                    <CardDescription>
-                        Anda tidak memiliki izin untuk melihat halaman ini.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                        Hanya pengguna dengan posisi 'Management' yang dapat mengakses riwayat aktivitas login. Silakan hubungi admin jika Anda merasa ini adalah sebuah kesalahan.
-                    </p>
-                </CardContent>
-            </Card>
-        </main>
-    );
-  }
-
-  return (
-    <main className="p-4 sm:px-6 md:p-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Aktivitas Login</CardTitle>
-          <CardDescription>
-            Lacak siapa saja yang login dan kapan mereka masuk ke sistem.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
+        <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Pengguna</TableHead>
@@ -236,6 +130,62 @@ export default function UserActivityPage() {
               )}
             </TableBody>
           </Table>
+    )
+}
+
+export default function UserActivityPage() {
+  const { isManagement, loading } = useAuth();
+
+  if (loading) {
+    return (
+        <main className="p-4 sm:px-6 md:p-8">
+            <Card>
+            <CardHeader>
+                <CardTitle><Skeleton className="h-7 w-48" /></CardTitle>
+                <CardDescription><Skeleton className="h-4 w-72" /></CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Skeleton className="h-[300px] w-full" />
+            </CardContent>
+            </Card>
+        </main>
+    );
+  }
+
+  if (!isManagement) {
+    return (
+        <main className="p-4 sm:px-6 md:p-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <ShieldAlert className="h-6 w-6 text-destructive" />
+                        Akses Ditolak
+                    </CardTitle>
+                    <CardDescription>
+                        Anda tidak memiliki izin untuk melihat halaman ini.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                        Hanya pengguna dengan posisi 'Management' yang dapat mengakses riwayat aktivitas login. Silakan hubungi admin jika Anda merasa ini adalah sebuah kesalahan.
+                    </p>
+                </CardContent>
+            </Card>
+        </main>
+    );
+  }
+
+  return (
+    <main className="p-4 sm:px-6 md:p-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Aktivitas Login</CardTitle>
+          <CardDescription>
+            Lacak siapa saja yang login dan kapan mereka masuk ke sistem.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <ActivityTable />
         </CardContent>
       </Card>
     </main>

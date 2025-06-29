@@ -21,13 +21,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { db, storage, auth } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, DocumentData, doc, deleteDoc, getDoc } from 'firebase/firestore';
+import { db, storage } from '@/lib/firebase';
+import { collection, onSnapshot, query, orderBy, DocumentData, doc, deleteDoc } from 'firebase/firestore';
 import { ref, deleteObject } from "firebase/storage";
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { onAuthStateChanged, type User } from 'firebase/auth';
+import { useAuth } from '@/hooks/use-auth';
 
 interface Product {
     id: string;
@@ -41,27 +41,13 @@ export function ProductList() {
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
-    const [isManagement, setIsManagement] = useState(false);
+    const { isManagement } = useAuth();
 
     useEffect(() => {
         if (!db) {
             setIsLoading(false);
             return;
         }
-
-        const unsubscribeAuth = onAuthStateChanged(auth, async (user: User | null) => {
-            if (user) {
-                const userDocRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userDocRef);
-                if (userDoc.exists() && userDoc.data().position === 'Management') {
-                    setIsManagement(true);
-                } else {
-                    setIsManagement(false);
-                }
-            } else {
-                setIsManagement(false);
-            }
-        });
         
         const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
         const unsubscribeProducts = onSnapshot(q, (querySnapshot) => {
@@ -77,7 +63,6 @@ export function ProductList() {
         });
 
         return () => {
-            unsubscribeAuth();
             unsubscribeProducts();
         };
     }, []);

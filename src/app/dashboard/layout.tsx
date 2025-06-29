@@ -2,132 +2,40 @@
 
 import { UserNav } from "@/components/dashboard/user-nav";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
-import { ProfileSetupGuard } from "@/components/auth/profile-setup-guard";
+import { ProfileSetupForm } from "@/components/auth/profile-setup-form";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signOut, onAuthStateChanged, type User } from "firebase/auth";
+import { signOut } from "firebase/auth";
 import { auth, db, messaging } from "@/lib/firebase";
-import { doc, updateDoc, onSnapshot, type Unsubscribe, getDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { getToken, onMessage } from "firebase/messaging";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const router = useRouter();
-  const [userName, setUserName] = useState("");
-  const [userPosition, setUserPosition] = useState("");
-  const [userStory, setUserStory] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
-  const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
+function DashboardAppLayout({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
-  const [permissionStatus, setPermissionStatus] = useState<'loading' | 'complete'>('loading');
+  const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
+  
+  const { user, userProfile, loading } = useAuth();
+  
+  // Profile is considered complete if the userProfile object exists.
+  const isProfileSetupComplete = !!userProfile;
 
-  const handleProfileUpdate = async () => {
-    const user = auth.currentUser;
-    if (user && db) {
-        const userRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(userRef);
-        if (docSnap.exists()) {
-            const userData = docSnap.data();
-            setUserName(userData.name || "");
-            setUserPosition(userData.position || "");
-            setUserStory(userData.story || "");
-            setAvatarUrl(userData.avatarUrl || "");
-        }
-    }
+  const handleProfileUpdate = () => {
+    // The auth context now handles profile updates automatically via onSnapshot.
+    // This function is called when the setup form completes, but we don't need to do anything here.
   };
 
-  useEffect(() => {
-    let unsubscribeOnMessage: (() => void) | undefined;
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && messaging) {
-        unsubscribeOnMessage = onMessage(messaging, (payload) => {
-            console.log('Foreground message received.', payload);
-            toast({
-                title: payload.notification?.title || "Notifikasi Baru",
-                description: payload.notification?.body || "",
-            });
-        });
-    }
-
-    const unsubscribeAuth = onAuthStateChanged(auth, (user: User | null) => {
-      let unsubscribeSnapshot: Unsubscribe | undefined;
-
-      if (user && db) {
-        if (messaging) {
-          Notification.requestPermission().then((permission) => {
-            if (permission === 'granted') {
-              getToken(messaging).then(async (currentToken) => {
-                if (currentToken) {
-                  const userRef = doc(db, 'users', user.uid);
-                  const docSnap = await getDoc(userRef);
-                  if (docSnap.exists() && docSnap.data().fcmToken !== currentToken) {
-                    await updateDoc(userRef, { fcmToken: currentToken });
-                  }
-                }
-              }).catch((err) => console.error('An error occurred while retrieving token.', err));
-            }
-          });
-        }
-
-        const userRef = doc(db, 'users', user.uid);
-        unsubscribeSnapshot = onSnapshot(userRef, (docSnap) => {
-          if (docSnap.exists()) {
-            const userData = docSnap.data();
-            const newName = userData.name || "";
-            const newPosition = userData.position || "";
-            const newStory = userData.story || "";
-            const newAvatar = userData.avatarUrl || "";
-
-            setUserName(newName);
-            setUserPosition(newPosition);
-            setUserStory(newStory);
-            setAvatarUrl(newAvatar);
-
-            localStorage.setItem('userName', newName);
-            localStorage.setItem('userPosition', newPosition);
-            localStorage.setItem('userStory', newStory);
-            localStorage.setItem('avatarUrl', newAvatar);
-            
-            setPermissionStatus('complete'); // Buka gerbang setelah peran dikonfirmasi
-          } else {
-            // User diautentikasi tetapi belum memiliki dokumen profil (pengaturan pertama kali)
-            // ProfileSetupGuard akan menanganinya.
-            setPermissionStatus('complete');
-          }
-        }, (error) => {
-            console.error("Gagal memuat data pengguna:", error);
-            // Pertimbangkan untuk mengarahkan pengguna ke halaman error atau login ulang
-            setPermissionStatus('complete');
-        });
-      } else {
-        // Tidak ada pengguna yang login, ProfileSetupGuard akan mengarahkan ke halaman utama
-        setPermissionStatus('loading');
-      }
-
-      return () => {
-        if (unsubscribeSnapshot) {
-          unsubscribeSnapshot();
-        }
-      };
-    });
-
-    return () => {
-      unsubscribeAuth();
-      if (unsubscribeOnMessage) unsubscribeOnMessage();
-    };
-  }, [toast]);
-  
-  const onProfileUpdate = () => {
-    const newAvatarUrl = localStorage.getItem("avatarUrl") || "";
-    const newStory = localStorage.getItem("userStory") || "";
-    
-    if(auth.currentUser && db) {
+  const onProfileUpdateDialog = () => {
+    // This function is for the UserNav dialog when updating avatar/story
+    if(auth.currentUser && db && userProfile) {
+        const newAvatarUrl = localStorage.getItem("avatarUrl") || userProfile.avatarUrl;
+        const newStory = localStorage.getItem("userStory") || userProfile.story;
+        
         const userRef = doc(db, 'users', auth.currentUser.uid);
         updateDoc(userRef, { 
           avatarUrl: newAvatarUrl,
@@ -135,6 +43,37 @@ export default function DashboardLayout({
         });
     }
   }
+
+  useEffect(() => {
+    let unsubscribeOnMessage: (() => void) | undefined;
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && messaging && user) {
+        unsubscribeOnMessage = onMessage(messaging, (payload) => {
+            console.log('Foreground message received.', payload);
+            toast({
+                title: payload.notification?.title || "Notifikasi Baru",
+                description: payload.notification?.body || "",
+            });
+        });
+
+        Notification.requestPermission().then((permission) => {
+          if (permission === 'granted') {
+            getToken(messaging).then(async (currentToken) => {
+              if (currentToken) {
+                const userRef = doc(db, 'users', user.uid);
+                // No need to getDoc, userProfile from context has the data.
+                if (userProfile && (userProfile as any).fcmToken !== currentToken) {
+                  await updateDoc(userRef, { fcmToken: currentToken });
+                }
+              }
+            }).catch((err) => console.error('An error occurred while retrieving token.', err));
+          }
+        });
+    }
+
+    return () => {
+      if (unsubscribeOnMessage) unsubscribeOnMessage();
+    };
+  }, [toast, user, userProfile]);
 
   const handleLogout = async () => {
     try {
@@ -146,28 +85,55 @@ export default function DashboardLayout({
         });
       }
       await signOut(auth);
-      localStorage.clear(); // Hapus semua data lokal untuk sesi yang bersih
-      router.push('/');
+      // The auth provider will handle redirecting to '/'
     } catch (error) {
       console.error("Gagal keluar:", error);
     }
   };
 
-  const renderContent = () => {
-    if (permissionStatus === 'loading') {
-      return (
-        <div className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-            <div className="grid grid-flow-col auto-cols-[minmax(220px,1fr)] gap-4 overflow-x-auto pb-2">
-                {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-32 rounded-lg" />)}
-            </div>
-            <div className="grid grid-cols-1 gap-4 md:gap-8">
-                <Skeleton className="h-96 rounded-lg" />
-                <Skeleton className="h-96 rounded-lg" />
-            </div>
+  if (loading) {
+    return (
+      <div className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+        <div className="grid grid-flow-col auto-cols-[minmax(220px,1fr)] gap-4 overflow-x-auto pb-2">
+            {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-32 rounded-lg" />)}
         </div>
-      );
-    }
-    return <ProfileSetupGuard onProfileComplete={handleProfileUpdate}>{children}</ProfileSetupGuard>;
+        <div className="grid grid-cols-1 gap-4 md:gap-8">
+            <Skeleton className="h-96 rounded-lg" />
+            <Skeleton className="h-96 rounded-lg" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isProfileSetupComplete && user) {
+     return (
+        <>
+            <div className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 blur-sm pointer-events-none">
+                <div className="grid grid-flow-col auto-cols-[minmax(220px,1fr)] gap-4 overflow-x-auto pb-2">
+                    {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-32 rounded-lg" />)}
+                </div>
+                <div className="grid grid-cols-1 gap-4 md:gap-8">
+                    <Skeleton className="h-96 rounded-lg" />
+                    <Skeleton className="h-96 rounded-lg" />
+                </div>
+            </div>
+            
+            <Dialog open={true} modal={true}>
+              <DialogContent
+                hideCloseButton
+                onEscapeKeyDown={(e) => e.preventDefault()}
+                onInteractOutside={(e) => e.preventDefault()}
+                className="bg-transparent p-0 border-none shadow-none w-full max-w-md flex items-center justify-center"
+              >
+                <DialogHeader className="sr-only">
+                  <DialogTitle>Absen dulu ya guys</DialogTitle>
+                  <DialogDescription>Sebelum melanjutkan, dimohon untuk berikan nama dan posisi yang sesuai yess.</DialogDescription>
+                </DialogHeader>
+                <ProfileSetupForm onComplete={handleProfileUpdate} />
+              </DialogContent>
+            </Dialog>
+        </>
+    );
   }
 
   return (
@@ -183,24 +149,37 @@ export default function DashboardLayout({
                 />
             </Link>
             <UserNav 
-              name={userName} 
-              position={userPosition} 
-              story={userStory}
-              avatarUrl={avatarUrl} 
-              onProfileUpdate={onProfileUpdate}
+              name={userProfile?.name} 
+              position={userProfile?.position} 
+              story={userProfile?.story}
+              avatarUrl={userProfile?.avatarUrl} 
+              onProfileUpdate={onProfileUpdateDialog}
               isProfileDialogOpen={isProfileDialogOpen}
               onProfileDialogOpenChange={setProfileDialogOpen}
               onLogout={handleLogout}
             />
         </header>
         <main className="flex-1 pb-16">
-            {renderContent()}
+            {children}
         </main>
         <BottomNav 
           isProfileDialogOpen={isProfileDialogOpen}
           onProfileDialogOpenChange={setProfileDialogOpen}
-          userPosition={userPosition}
+          userPosition={userProfile?.position || null}
         />
     </div>
   );
+}
+
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <AuthProvider>
+      <DashboardAppLayout>{children}</DashboardAppLayout>
+    </AuthProvider>
+  )
 }

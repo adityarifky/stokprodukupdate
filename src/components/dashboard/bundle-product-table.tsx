@@ -18,13 +18,13 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
-import { db, auth } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, DocumentData, doc, deleteDoc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { collection, onSnapshot, query, orderBy, DocumentData, doc, deleteDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BundleFormDialog } from './bundle-form-dialog';
 import { Badge } from '../ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
-import { onAuthStateChanged, type User } from 'firebase/auth';
+import { useAuth } from '@/hooks/use-auth';
 
 interface Product {
     id: string;
@@ -44,24 +44,10 @@ export function BundleProductTable() {
     const [isLoading, setIsLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingBundle, setEditingBundle] = useState<Bundle | null>(null);
-    const [isManagement, setIsManagement] = useState(false);
+    const { isManagement } = useAuth();
 
     useEffect(() => {
         if (!db) return;
-
-        const unsubscribeAuth = onAuthStateChanged(auth, async (user: User | null) => {
-             if (user) {
-                const userDocRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userDocRef);
-                if (userDoc.exists() && userDoc.data().position === 'Management') {
-                    setIsManagement(true);
-                } else {
-                    setIsManagement(false);
-                }
-            } else {
-                setIsManagement(false);
-            }
-        });
         
         const qProducts = query(collection(db, "products"), orderBy("name", "asc"));
         const unsubscribeProducts = onSnapshot(qProducts, (querySnapshot) => {
@@ -86,7 +72,6 @@ export function BundleProductTable() {
         });
 
         return () => {
-            unsubscribeAuth();
             unsubscribeProducts();
             unsubscribeBundles();
         };

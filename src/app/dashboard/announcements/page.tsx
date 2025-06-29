@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { db, auth } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot, Timestamp, doc, deleteDoc, getDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, Timestamp, doc, deleteDoc } from 'firebase/firestore';
 import {
   Card,
   CardContent,
@@ -23,7 +23,7 @@ import { AnnouncementFormDialog } from '@/components/dashboard/announcement-form
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { AnnouncementReplies } from '@/components/dashboard/announcement-replies';
-import { onAuthStateChanged, type User } from 'firebase/auth';
+import { useAuth } from '@/hooks/use-auth';
 
 interface Announcement {
     id: string;
@@ -36,30 +36,16 @@ interface Announcement {
 export default function AnnouncementsPage() {
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isManagement, setIsManagement] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingAnnouncement, setEditingAnnouncement] = useState<Omit<Announcement, 'timestamp'> | null>(null);
     const { toast } = useToast();
+    const { isManagement } = useAuth(); // Use centralized auth state
 
     useEffect(() => {
         if (!db) {
             setIsLoading(false);
             return;
         }
-
-        const unsubscribeAuth = onAuthStateChanged(auth, async (user: User | null) => {
-            if (user) {
-                const userDocRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userDocRef);
-                if (userDoc.exists() && userDoc.data().position === 'Management') {
-                    setIsManagement(true);
-                } else {
-                    setIsManagement(false);
-                }
-            } else {
-                setIsManagement(false);
-            }
-        });
 
         const q = query(collection(db, "announcements"), orderBy("timestamp", "desc"));
 
@@ -83,7 +69,6 @@ export default function AnnouncementsPage() {
         });
 
         return () => {
-            unsubscribeAuth();
             unsubscribeAnnouncements();
         };
     }, []);

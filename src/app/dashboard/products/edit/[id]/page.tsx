@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { doc, getDoc, DocumentData } from "firebase/firestore";
-import { db, auth } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditProductForm } from "@/components/dashboard/edit-product-form";
-import { onAuthStateChanged, type User } from "firebase/auth";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Product extends DocumentData {
     id: string;
@@ -26,41 +26,20 @@ export default function EditProductPage() {
     const params = useParams();
     const { id } = params;
     const [product, setProduct] = useState<Product | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isFetchingProduct, setIsFetchingProduct] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
-
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
-            if (user && db) {
-                try {
-                    const userRef = doc(db, 'users', user.uid);
-                    const userSnap = await getDoc(userRef);
-                    if (userSnap.exists() && userSnap.data().position === 'Management') {
-                        setIsAllowed(true);
-                    } else {
-                        setIsAllowed(false);
-                        setIsLoading(false);
-                    }
-                } catch {
-                    setIsAllowed(false);
-                    setIsLoading(false);
-                }
-            } else {
-                setIsAllowed(false);
-                setIsLoading(false);
-            }
-        });
-
-        return () => unsubscribe();
-    }, []);
     
+    const { isManagement, loading: isAuthLoading } = useAuth();
+
     useEffect(() => {
-        if (isAllowed === false) return;
-        if (isAllowed === null) return;
+        if (isAuthLoading) return; // Wait for auth check to complete
+        if (!isManagement) {
+            setIsFetchingProduct(false);
+            return;
+        };
         
         if (!id || typeof id !== 'string') {
-             setIsLoading(false);
+             setIsFetchingProduct(false);
              setError("ID produk tidak valid.");
              return;
         }
@@ -80,15 +59,15 @@ export default function EditProductPage() {
                 console.error("Error fetching product:", err);
                 setError("Gagal memuat produk.");
             } finally {
-                setIsLoading(false);
+                setIsFetchingProduct(false);
             }
         };
 
         fetchProduct();
-    }, [id, isAllowed]);
+    }, [id, isManagement, isAuthLoading]);
 
     const renderContent = () => {
-        if (isLoading || isAllowed === null) {
+        if (isAuthLoading || isFetchingProduct) {
             return (
                 <Card>
                     <CardHeader>
@@ -115,7 +94,7 @@ export default function EditProductPage() {
             );
         }
 
-        if (isAllowed === false) {
+        if (!isManagement) {
              return (
                 <Card>
                     <CardHeader>

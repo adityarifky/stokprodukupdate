@@ -36,36 +36,36 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </motion.div>
+        <motion.div {...cardAnimation}>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Stok Creampuff</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">127</div>
+              <p className="text-xs text-muted-foreground">
+                Total stok semua produk
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
         <Link href="/dashboard/sales-details">
           <motion.div {...cardAnimation}>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Paket Creampuff Terjual</CardTitle>
+                <CardTitle className="text-sm font-medium">Creampuff Pieces Terjual</CardTitle>
                 <CreditCard className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">+2350</div>
+                <div className="text-2xl font-bold">+12230</div>
                 <p className="text-xs text-muted-foreground">
-                  +180.1% dari bulan lalu
+                  +19% dari bulan lalu
                 </p>
               </CardContent>
             </Card>
           </motion.div>
         </Link>
-        <motion.div {...cardAnimation}>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Creampuff Pieces Terjual</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">+12230</div>
-              <p className="text-xs text-muted-foreground">
-                +19% dari bulan lalu
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
         <motion.div {...cardAnimation}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

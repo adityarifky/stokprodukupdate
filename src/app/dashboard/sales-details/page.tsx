@@ -32,7 +32,7 @@ export default function SalesDetailsPage() {
         <CardHeader>
           <CardTitle>Detail Penjualan</CardTitle>
           <CardDescription>
-            Rincian transaksi penjualan paket creampuff.
+            Rincian transaksi penjualan.
           </CardDescription>
         </CardHeader>
         <CardContent>

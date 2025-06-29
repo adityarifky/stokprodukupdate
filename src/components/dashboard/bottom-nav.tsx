@@ -13,7 +13,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 const allNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: Home, roles: ['Management', 'Kitchen', 'Kasir'] },
@@ -29,17 +29,13 @@ const allNavItems = [
 export function BottomNav({
   isProfileDialogOpen,
   onProfileDialogOpenChange,
+  userPosition,
 }: {
   isProfileDialogOpen: boolean;
   onProfileDialogOpenChange: (open: boolean) => void;
+  userPosition: string | null;
 }) {
   const pathname = usePathname();
-  const [userPosition, setUserPosition] = useState<string | null>(null);
-
-  useEffect(() => {
-    const position = localStorage.getItem("userPosition");
-    setUserPosition(position);
-  }, []);
 
   const navItems = allNavItems.filter(item => userPosition && item.roles.includes(userPosition));
 

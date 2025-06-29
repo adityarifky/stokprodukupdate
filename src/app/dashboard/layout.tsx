@@ -12,6 +12,7 @@ import { auth, db, messaging } from "@/lib/firebase";
 import { doc, updateDoc, onSnapshot, type Unsubscribe, getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { getToken, onMessage } from "firebase/messaging";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardLayout({
   children,
@@ -25,17 +26,24 @@ export default function DashboardLayout({
   const [avatarUrl, setAvatarUrl] = useState("");
   const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
   const { toast } = useToast();
+  const [permissionStatus, setPermissionStatus] = useState<'loading' | 'complete'>('loading');
 
-  const handleProfileUpdate = () => {
-    setUserName(localStorage.getItem("userName") || "");
-    setUserPosition(localStorage.getItem("userPosition") || "");
-    setUserStory(localStorage.getItem("userStory") || "");
-    setAvatarUrl(localStorage.getItem("avatarUrl") || "");
+  const handleProfileUpdate = async () => {
+    const user = auth.currentUser;
+    if (user && db) {
+        const userRef = doc(db, 'users', user.uid);
+        const docSnap = await getDoc(userRef);
+        if (docSnap.exists()) {
+            const userData = docSnap.data();
+            setUserName(userData.name || "");
+            setUserPosition(userData.position || "");
+            setUserStory(userData.story || "");
+            setAvatarUrl(userData.avatarUrl || "");
+        }
+    }
   };
 
   useEffect(() => {
-    handleProfileUpdate();
-
     let unsubscribeOnMessage: (() => void) | undefined;
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator && messaging) {
         unsubscribeOnMessage = onMessage(messaging, (payload) => {
@@ -85,8 +93,21 @@ export default function DashboardLayout({
             localStorage.setItem('userPosition', newPosition);
             localStorage.setItem('userStory', newStory);
             localStorage.setItem('avatarUrl', newAvatar);
+            
+            setPermissionStatus('complete'); // Buka gerbang setelah peran dikonfirmasi
+          } else {
+            // User diautentikasi tetapi belum memiliki dokumen profil (pengaturan pertama kali)
+            // ProfileSetupGuard akan menanganinya.
+            setPermissionStatus('complete');
           }
+        }, (error) => {
+            console.error("Gagal memuat data pengguna:", error);
+            // Pertimbangkan untuk mengarahkan pengguna ke halaman error atau login ulang
+            setPermissionStatus('complete');
         });
+      } else {
+        // Tidak ada pengguna yang login, ProfileSetupGuard akan mengarahkan ke halaman utama
+        setPermissionStatus('loading');
       }
 
       return () => {
@@ -108,8 +129,6 @@ export default function DashboardLayout({
     
     if(auth.currentUser && db) {
         const userRef = doc(db, 'users', auth.currentUser.uid);
-        // This update will be picked up by the onSnapshot listener,
-        // which will then update the state and UI automatically.
         updateDoc(userRef, { 
           avatarUrl: newAvatarUrl,
           story: newStory,
@@ -127,16 +146,29 @@ export default function DashboardLayout({
         });
       }
       await signOut(auth);
-      localStorage.removeItem('userName');
-      localStorage.removeItem('userPosition');
-      localStorage.removeItem('profileSetupComplete');
-      localStorage.removeItem('avatarUrl');
-      localStorage.removeItem('userStory');
+      localStorage.clear(); // Hapus semua data lokal untuk sesi yang bersih
       router.push('/');
     } catch (error) {
       console.error("Gagal keluar:", error);
     }
   };
+
+  const renderContent = () => {
+    if (permissionStatus === 'loading') {
+      return (
+        <div className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+            <div className="grid grid-flow-col auto-cols-[minmax(220px,1fr)] gap-4 overflow-x-auto pb-2">
+                {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-32 rounded-lg" />)}
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:gap-8">
+                <Skeleton className="h-96 rounded-lg" />
+                <Skeleton className="h-96 rounded-lg" />
+            </div>
+        </div>
+      );
+    }
+    return <ProfileSetupGuard onProfileComplete={handleProfileUpdate}>{children}</ProfileSetupGuard>;
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -162,11 +194,12 @@ export default function DashboardLayout({
             />
         </header>
         <main className="flex-1 pb-16">
-            <ProfileSetupGuard onProfileComplete={handleProfileUpdate}>{children}</ProfileSetupGuard>
+            {renderContent()}
         </main>
         <BottomNav 
           isProfileDialogOpen={isProfileDialogOpen}
           onProfileDialogOpenChange={setProfileDialogOpen}
+          userPosition={userPosition}
         />
     </div>
   );

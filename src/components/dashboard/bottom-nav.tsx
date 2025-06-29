@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/dashboard/products', label: 'Produk', icon: Package },
-  { href: '/dashboard/products/add', label: 'Update', icon: FileUp },
+  { href: '/dashboard/update-stock', label: 'Update', icon: FileUp },
   { href: '/dashboard/stock-history', label: 'Riwayat', icon: FileClock },
   { href: '/dashboard/announcements', label: 'Pengumuman', icon: Megaphone },
   { href: '/dashboard/user-activity', label: 'Aktivitas', icon: History },

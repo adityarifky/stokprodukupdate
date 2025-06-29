@@ -42,14 +42,19 @@ export function UserNav() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [greeting, setGreeting] = React.useState("");
 
-  React.useEffect(() => {
-    // Pilih sapaan acak saat komponen dimuat di sisi klien
+  const selectRandomGreeting = React.useCallback(() => {
     setGreeting(greetings[Math.floor(Math.random() * greetings.length)]);
   }, []);
+
+  React.useEffect(() => {
+    // Pilih sapaan acak saat komponen dimuat di sisi klien
+    selectRandomGreeting();
+  }, [selectRandomGreeting]);
 
   const handleProfileSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     setName(tempName);
+    selectRandomGreeting(); // Memilih sapaan baru saat nama diperbarui
     setIsDialogOpen(false);
   };
 

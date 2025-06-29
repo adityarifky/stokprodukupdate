@@ -140,13 +140,13 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background px-4">
             <Link href="/dashboard" className="flex items-center">
                 <Image
                     src="/Logo Dreampuff.png"
                     alt="Dreampuff Logo"
-                    width={160}
-                    height={40}
+                    width={140}
+                    height={35}
                     priority
                 />
             </Link>

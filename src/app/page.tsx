@@ -1,6 +1,6 @@
 "use client";
 
-import { CakeSlice } from "lucide-react";
+import Image from "next/image";
 import { LoginForm } from "@/components/auth/login-form";
 import { useEffect, useState } from "react";
 
@@ -17,7 +17,13 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-4 flex items-center gap-3">
-            <CakeSlice className="h-10 w-10 text-primary" />
+            <Image
+              src="/logo.png"
+              alt="Logo Wawasan SweetStock"
+              width={50}
+              height={50}
+              className="object-contain"
+            />
             <h1 className="font-headline text-4xl font-bold tracking-tight text-primary">
               Wawasan SweetStock
             </h1>

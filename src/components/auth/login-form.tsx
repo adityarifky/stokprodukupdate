@@ -18,6 +18,9 @@ import {
 } from "@/components/ui/form";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Mail, Lock } from "lucide-react";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Silakan masukkan alamat email yang valid." }),
@@ -26,6 +29,7 @@ const formSchema = z.object({
 
 export function LoginForm() {
   const router = useRouter();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -36,13 +40,48 @@ export function LoginForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    // Simulate API call and redirect
-    setTimeout(() => {
+
+    if (!auth) {
+      toast({
+        title: "Konfigurasi Firebase Hilang",
+        description: "Kunci API Firebase tidak ditemukan. Autentikasi dinonaktifkan.",
+        variant: "destructive",
+      });
       setIsLoading(false);
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, values.email, values.password);
       router.push("/dashboard");
-    }, 1000);
+    } catch (error: any) {
+      let errorMessage = "Terjadi kesalahan saat masuk.";
+      switch (error.code) {
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          errorMessage = "Email atau kata sandi salah. Silakan coba lagi.";
+          break;
+        case 'auth/invalid-email':
+          errorMessage = "Format email tidak valid.";
+          break;
+        case 'auth/invalid-api-key':
+          errorMessage = "Kunci API Firebase tidak valid. Mohon periksa konfigurasi Anda.";
+          break;
+        default:
+          errorMessage = "Terjadi kesalahan yang tidak terduga. Silakan coba lagi nanti.";
+          break;
+      }
+      toast({
+        title: "Gagal Masuk",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -63,7 +102,7 @@ export function LoginForm() {
                   <FormControl>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="nama@contoh.com" {...field} className="pl-10" suppressHydrationWarning />
+                      <Input placeholder="nama@contoh.com" {...field} suppressHydrationWarning />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -79,7 +118,7 @@ export function LoginForm() {
                   <FormControl>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input type="password" placeholder="••••••••" {...field} className="pl-10" suppressHydrationWarning />
+                      <Input type="password" placeholder="••••••••" {...field} suppressHydrationWarning />
                     </div>
                   </FormControl>
                   <FormMessage />

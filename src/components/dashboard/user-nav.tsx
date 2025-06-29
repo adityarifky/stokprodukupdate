@@ -74,11 +74,13 @@ export function UserNav() {
   }, [selectRandomGreeting]);
 
   React.useEffect(() => {
-    const intervalId = setInterval(() => {
-      setIsGreetingVisible(prev => !prev);
-    }, 3000);
-    return () => clearInterval(intervalId);
-  }, []);
+    if (greeting) {
+      const intervalId = setInterval(() => {
+        setIsGreetingVisible(prev => !prev);
+      }, 3000);
+      return () => clearInterval(intervalId);
+    }
+  }, [greeting]);
 
   const handleProfileSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -221,6 +223,10 @@ export function UserNav() {
                   </DialogTrigger>
                   {tempAvatarUrl && (
                     <DialogContent className="p-0 border-0 max-w-fit bg-transparent shadow-none">
+                      <DialogHeader className="sr-only">
+                        <DialogTitle>Pratinjau Gambar</DialogTitle>
+                        <DialogDescription>Tampilan gambar avatar dalam ukuran penuh.</DialogDescription>
+                      </DialogHeader>
                       <img
                         src={tempAvatarUrl}
                         alt="Pratinjau Avatar Pengguna"

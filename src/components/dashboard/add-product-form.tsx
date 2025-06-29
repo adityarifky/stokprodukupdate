@@ -31,7 +31,6 @@ import Image from "next/image";
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nama produk harus memiliki setidaknya 2 karakter." }),
   description: z.string().optional(),
-  stock: z.coerce.number().int().min(0, { message: "Stok tidak boleh negatif." }),
   category: z.enum(["Creampuff", "Cheesecake", "Millecrepes", "Minuman", "Snackbox", "Lainnya"], {
     required_error: "Anda harus memilih kategori.",
   }),
@@ -50,7 +49,6 @@ export function AddProductForm() {
         defaultValues: {
             name: "",
             description: "",
-            stock: 0,
         },
     });
 
@@ -140,19 +138,6 @@ export function AddProductForm() {
                                             <SelectItem value="Lainnya">Lainnya</SelectItem>
                                         </SelectContent>
                                     </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="stock"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Stok Awal</FormLabel>
-                                    <FormControl>
-                                        <Input type="number" placeholder="cth. 50" {...field} />
-                                    </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}

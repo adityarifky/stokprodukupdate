@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from 'next/link';
 import { motion, AnimatePresence } from "framer-motion";
+import Cropper, { type Area } from 'react-easy-crop';
 import { LogOut, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import getCroppedImg from "@/lib/image-utils";
 
 const greetings = [
   "Halo Bro! 👋",
@@ -47,6 +50,14 @@ export function UserNav() {
   const [tempAvatarUrl, setTempAvatarUrl] = React.useState(avatarUrl);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isImageViewerOpen, setImageViewerOpen] = React.useState(false);
+
+  // States for image cropper
+  const [imageToCrop, setImageToCrop] = React.useState<string | null>(null);
+  const [isCropperOpen, setIsCropperOpen] = React.useState(false);
+  const [crop, setCrop] = React.useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = React.useState(1);
+  const [rotation, setRotation] = React.useState(0);
+  const [croppedAreaPixels, setCroppedAreaPixels] = React.useState<Area | null>(null);
 
   const selectRandomGreeting = React.useCallback(() => {
     setGreeting((currentGreeting) => {
@@ -82,9 +93,15 @@ export function UserNav() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setTempAvatarUrl(reader.result as string);
+        setImageToCrop(reader.result as string);
+        setIsCropperOpen(true);
+        setZoom(1);
+        setRotation(0);
       };
       reader.readAsDataURL(file);
+    }
+     if (event.target) {
+      event.target.value = "";
     }
   };
 
@@ -94,6 +111,30 @@ export function UserNav() {
       setTempAvatarUrl(avatarUrl);
     }
   }, [isDialogOpen, name, avatarUrl]);
+  
+  const onCropComplete = React.useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const showCroppedImage = React.useCallback(async () => {
+    if (!imageToCrop || !croppedAreaPixels) {
+      return;
+    }
+    try {
+      const croppedImage = await getCroppedImg(
+        imageToCrop,
+        croppedAreaPixels,
+        rotation
+      );
+      if (croppedImage) {
+        setTempAvatarUrl(croppedImage);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setIsCropperOpen(false);
+  }, [imageToCrop, croppedAreaPixels, rotation]);
+
 
   return (
     <div className="flex items-center gap-4">
@@ -216,6 +257,63 @@ export function UserNav() {
             </DialogFooter>
           </form>
         </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isCropperOpen} onOpenChange={setIsCropperOpen}>
+          <DialogContent className="sm:max-w-[425px] md:max-w-lg">
+              <DialogHeader>
+                  <DialogTitle>Sesuaikan Gambar</DialogTitle>
+                  <DialogDescription>
+                      Pangkas, perbesar, dan putar gambar Anda.
+                  </DialogDescription>
+              </DialogHeader>
+              <div className="relative w-full h-80 bg-muted rounded-md overflow-hidden">
+                  {imageToCrop && (
+                      <Cropper
+                          image={imageToCrop}
+                          crop={crop}
+                          zoom={zoom}
+                          rotation={rotation}
+                          aspect={1}
+                          cropShape="round"
+                          onCropChange={setCrop}
+                          onZoomChange={setZoom}
+                          onRotationChange={setRotation}
+                          onCropComplete={onCropComplete}
+                      />
+                  )}
+              </div>
+              <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                      <Label htmlFor="zoom">Perbesar</Label>
+                      <Slider
+                          id="zoom"
+                          min={1}
+                          max={3}
+                          step={0.1}
+                          value={[zoom]}
+                          onValueChange={(value) => setZoom(value[0])}
+                          className="w-full"
+                      />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="rotation">Putar</Label>
+                      <Slider
+                          id="rotation"
+                          min={0}
+                          max={360}
+                          step={1}
+                          value={[rotation]}
+                          onValueChange={(value) => setRotation(value[0])}
+                          className="w-full"
+                      />
+                  </div>
+              </div>
+              <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsCropperOpen(false)}>Batal</Button>
+                  <Button onClick={showCroppedImage}>Simpan Avatar</Button>
+              </DialogFooter>
+          </DialogContent>
       </Dialog>
     </div>
   );

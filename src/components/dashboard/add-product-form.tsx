@@ -27,7 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Upload } from "lucide-react";
 import Image from "next/image";
-import { db, storage } from "@/lib/firebase";
+import { auth, db, storage } from "@/lib/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -69,6 +69,18 @@ export function AddProductForm() {
     
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true);
+
+        if (!auth?.currentUser) {
+            toast({
+                title: "Otentikasi Gagal",
+                description: "Sesi Anda tidak valid. Silakan coba masuk lagi.",
+                variant: "destructive",
+            });
+            setIsLoading(false);
+            router.push('/');
+            return;
+        }
+        
         if (!db || !storage) {
             toast({
                 title: "Konfigurasi Firebase Hilang",

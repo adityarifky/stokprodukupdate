@@ -18,7 +18,7 @@ export default function LoginPage() {
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-4 flex items-center gap-3">
             <Image
-              src="/dreampuff-logo.png"
+              src="/Logo Dreampuff.png"
               alt="Logo Dreampuff"
               width={80}
               height={80}

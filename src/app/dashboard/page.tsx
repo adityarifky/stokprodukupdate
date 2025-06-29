@@ -13,7 +13,7 @@ import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, DocumentData } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Utensils, Cake, Layers, CupSoda, Package, ShoppingBasket } from "lucide-react";
+import { Utensils, Cake, Layers, CupSoda, Package, ShoppingBasket, Megaphone } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
@@ -121,7 +121,10 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 md:gap-8 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="font-headline">Pengumuman Penting</CardTitle>
+            <CardTitle className="font-headline flex items-center gap-2">
+                <Megaphone className="h-6 w-6"/>
+                Pengumuman
+            </CardTitle>
             <CardDescription>
               Informasi dan pembaruan terbaru dari tim.
             </CardDescription>

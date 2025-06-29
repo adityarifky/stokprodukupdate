@@ -96,7 +96,7 @@ export function ProductList() {
                     <div>
                         <CardTitle>Produk Satuan</CardTitle>
                         <CardDescription>
-                            Kelola produk Anda dan lihat inventarisnya.
+                            Kelola produk Anda dan lihat tabel dibawah.
                         </CardDescription>
                     </div>
                     <Button asChild>

@@ -44,14 +44,10 @@ export default function DashboardLayout({
             </Link>
             <UserNav name={userName} position={userPosition} avatarUrl={avatarUrl} onAvatarChange={onAvatarChange} />
         </header>
-        <div className="flex flex-1 flex-col">
-            <main className="flex-1 pb-16">
-                <ProfileSetupGuard onProfileComplete={handleProfileUpdate}>{children}</ProfileSetupGuard>
-            </main>
-            <div>
-                <BottomNav />
-            </div>
-        </div>
+        <main className="flex-1 pb-16">
+            <ProfileSetupGuard onProfileComplete={handleProfileUpdate}>{children}</ProfileSetupGuard>
+        </main>
+        <BottomNav />
     </div>
   );
 }

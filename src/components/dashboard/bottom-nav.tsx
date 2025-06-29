@@ -16,7 +16,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <footer className="sticky bottom-0 z-40 mt-auto w-full border-t bg-background/95 backdrop-blur-sm">
+    <footer className="fixed bottom-0 z-40 w-full border-t bg-background/95 backdrop-blur-sm">
       <nav className="flex h-16 items-center justify-center gap-10 px-4 sm:gap-16">
         {navItems.map((item) => (
           <Link

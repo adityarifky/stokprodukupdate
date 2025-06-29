@@ -46,7 +46,7 @@ export function LoginForm() {
     if (!auth) {
       toast({
         title: "Konfigurasi Firebase Hilang",
-        description: "Kunci API Firebase tidak ditemukan. Autentikasi dinonaktifkan.",
+        description: "Kunci API Firebase tidak ditemukan. Periksa file .env.local Anda dan pastikan server telah di-restart.",
         variant: "destructive",
       });
       setIsLoading(false);

@@ -26,7 +26,7 @@ if (firebaseConfig.apiKey) {
     console.error("Gagal menginisialisasi Firebase. Periksa konfigurasi Anda.", e);
   }
 } else {
-  console.warn("Kunci API Firebase hilang. Fitur terkait Firebase akan dinonaktifkan. Harap tambahkan NEXT_PUBLIC_FIREBASE_API_KEY ke file .env.local Anda.");
+  console.warn("Kunci API Firebase hilang. Fitur terkait Firebase akan dinonaktifkan. Harap tambahkan kredensial Anda ke file .env.local dan restart server pengembangan Anda.");
 }
 
 export { app, auth };

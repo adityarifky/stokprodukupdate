@@ -54,7 +54,7 @@ export function UpdateStockForm() {
     const [products, setProducts] = React.useState<Product[]>([]);
     const [isProductListLoading, setIsProductListLoading] = React.useState(true);
     const [categories, setCategories] = React.useState<string[]>([]);
-    const [selectedCategory, setSelectedCategory] = React.useState<string>("");
+    const [selectedCategory, setSelectedCategory] = React.useState<string>("all");
     const [isProductPopoverOpen, setIsProductPopoverOpen] = React.useState(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -175,7 +175,7 @@ export function UpdateStockForm() {
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 <FormItem>
-                    <FormLabel>Filter Kategori</FormLabel>
+                    <FormLabel>Pilih Kategori</FormLabel>
                      <Select onValueChange={handleCategoryChange} value={selectedCategory}>
                         <FormControl>
                             <SelectTrigger>

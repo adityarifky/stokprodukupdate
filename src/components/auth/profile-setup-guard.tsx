@@ -26,10 +26,13 @@ export function ProfileSetupGuard({ children, onProfileComplete }: { children: R
       }
       
       const profileSetupComplete = localStorage.getItem('profileSetupComplete');
-      if (profileSetupComplete !== 'true') {
-        setStatus('incomplete');
-      } else {
+      const userName = localStorage.getItem('userName');
+
+      // Profil dianggap lengkap hanya jika flag-nya 'true' DAN nama pengguna ada.
+      if (profileSetupComplete === 'true' && userName) {
         setStatus('complete');
+      } else {
+        setStatus('incomplete');
       }
     });
 

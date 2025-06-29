@@ -43,6 +43,9 @@ export function UserNav() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [greeting, setGreeting] = React.useState("");
   const [isGreetingVisible, setIsGreetingVisible] = React.useState(true);
+  const [avatarUrl, setAvatarUrl] = React.useState("");
+  const [tempAvatarUrl, setTempAvatarUrl] = React.useState(avatarUrl);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const selectRandomGreeting = React.useCallback(() => {
     setGreeting((currentGreeting) => {
@@ -63,20 +66,33 @@ export function UserNav() {
       setIsGreetingVisible(prev => !prev);
     }, 3000);
     return () => clearInterval(intervalId);
-  }, []);
+  }, [greeting]);
 
   const handleProfileSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     setName(tempName);
+    setAvatarUrl(tempAvatarUrl);
     selectRandomGreeting();
     setIsDialogOpen(false);
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setTempAvatarUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   React.useEffect(() => {
     if (isDialogOpen) {
       setTempName(name);
+      setTempAvatarUrl(avatarUrl);
     }
-  }, [isDialogOpen, name]);
+  }, [isDialogOpen, name, avatarUrl]);
 
   return (
     <div className="flex items-center gap-4">
@@ -85,9 +101,9 @@ export function UserNav() {
           {isGreetingVisible && (
             <motion.p
               key={greeting}
-              initial={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: 0 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
+              exit={{ opacity: 0, y: 0 }}
               transition={{ ease: "easeInOut", duration: 1.5 }}
               className="text-sm text-muted-foreground font-medium"
             >
@@ -101,7 +117,7 @@ export function UserNav() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10 border">
-                <AvatarImage src="" alt="User Avatar" />
+                <AvatarImage src={avatarUrl} alt="User Avatar" />
                 <AvatarFallback>
                   <span className="sr-only">User</span>
                   <User className="h-5 w-5" />
@@ -145,6 +161,24 @@ export function UserNav() {
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
+              <div className="flex flex-col items-center gap-4">
+                <Avatar className="h-24 w-24 border">
+                  <AvatarImage src={tempAvatarUrl} alt="User Avatar" />
+                  <AvatarFallback>
+                    <User className="h-12 w-12" />
+                  </AvatarFallback>
+                </Avatar>
+                <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                  Ubah Foto
+                </Button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept="image/*"
+                />
+              </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">
                   Nama

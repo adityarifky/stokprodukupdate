@@ -1,3 +1,4 @@
+
 "use client";
 
 import { motion } from "framer-motion";
@@ -13,9 +14,21 @@ import {
 import { Overview } from "@/components/dashboard/overview";
 import { ProductStockTable } from "@/components/dashboard/product-stock-table";
 import Link from "next/link";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, query, DocumentData } from "firebase/firestore";
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface DashboardStats {
+  totalProducts: number;
+  totalCreampuffStock: number;
+  totalOtherStock: number;
+  bestSellingProduct: string;
+}
 
 export default function DashboardPage() {
   const [currentDate, setCurrentDate] = useState("");
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const today = new Date();
@@ -26,17 +39,63 @@ export default function DashboardPage() {
       day: 'numeric'
     };
     setCurrentDate(today.toLocaleDateString('id-ID', options));
+    
+    if (!db) {
+      setIsLoading(false);
+      return;
+    }
+
+    const productsQuery = query(collection(db, "products"));
+    const unsubscribe = onSnapshot(productsQuery, (querySnapshot) => {
+      let totalCreampuffStock = 0;
+      let totalOtherStock = 0;
+      let bestSeller = { name: "N/A", stock: -1 };
+      
+      const products: DocumentData[] = [];
+      querySnapshot.forEach((doc) => {
+          products.push(doc.data());
+      });
+
+      products.forEach(product => {
+        if (product.category === 'Creampuff') {
+          totalCreampuffStock += product.stock || 0;
+        } else {
+          totalOtherStock += product.stock || 0;
+        }
+        if (product.stock > bestSeller.stock) {
+            bestSeller = { name: product.name, stock: product.stock };
+        }
+      });
+
+      setStats({
+        totalProducts: querySnapshot.size,
+        totalCreampuffStock,
+        totalOtherStock,
+        bestSellingProduct: querySnapshot.empty ? "N/A" : bestSeller.name,
+      });
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Error fetching dashboard stats:", error);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
   
   const cardAnimation = {
     whileHover: { scale: 1.05, transition: { type: "spring", stiffness: 400, damping: 10 } },
     whileTap: { scale: 0.95 },
   };
+  
+  const renderStat = (value: number | undefined) => {
+    if (isLoading) return <Skeleton className="h-8 w-16" />;
+    return <div className="text-2xl font-bold">{value ?? 0}</div>;
+  };
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-        <Link href="/dashboard/sales-details">
+        <Link href="/dashboard/products">
           <motion.div {...cardAnimation}>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -44,7 +103,7 @@ export default function DashboardPage() {
                 <CakeSlice className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">6</div>
+                {renderStat(stats?.totalProducts)}
                 <p className="text-xs text-muted-foreground">
                   {currentDate || "Memuat tanggal..."}
                 </p>
@@ -52,7 +111,7 @@ export default function DashboardPage() {
             </Card>
           </motion.div>
         </Link>
-        <Link href="/dashboard/sales-details">
+        <Link href="/dashboard/products">
           <motion.div {...cardAnimation}>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -60,7 +119,7 @@ export default function DashboardPage() {
                 <Package className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">127</div>
+                {renderStat(stats?.totalCreampuffStock)}
                 <p className="text-xs text-muted-foreground">
                   {currentDate || "Memuat tanggal..."}
                 </p>
@@ -68,7 +127,7 @@ export default function DashboardPage() {
             </Card>
           </motion.div>
         </Link>
-        <Link href="/dashboard/sales-details">
+        <Link href="/dashboard/products">
           <motion.div {...cardAnimation}>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -76,7 +135,7 @@ export default function DashboardPage() {
                   <PackageCheck className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">127</div>
+                  {renderStat(stats?.totalCreampuffStock)}
                   <p className="text-xs text-muted-foreground">
                     {currentDate || "Memuat tanggal..."}
                   </p>
@@ -84,7 +143,7 @@ export default function DashboardPage() {
               </Card>
           </motion.div>
         </Link>
-        <Link href="/dashboard/sales-details">
+        <Link href="/dashboard/products">
           <motion.div {...cardAnimation}>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -92,7 +151,7 @@ export default function DashboardPage() {
                 <Boxes className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">34</div>
+                {renderStat(stats?.totalOtherStock)}
                 <p className="text-xs text-muted-foreground">
                   {currentDate || "Memuat tanggal..."}
                 </p>
@@ -100,7 +159,7 @@ export default function DashboardPage() {
             </Card>
           </motion.div>
         </Link>
-        <Link href="/dashboard/sales-details">
+        <Link href="/dashboard/products">
           <motion.div {...cardAnimation}>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -108,7 +167,7 @@ export default function DashboardPage() {
                 <PackageMinus className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">12</div>
+                {renderStat(stats?.totalOtherStock)}
                 <p className="text-xs text-muted-foreground">
                   {currentDate || "Memuat tanggal..."}
                 </p>
@@ -116,7 +175,7 @@ export default function DashboardPage() {
             </Card>
           </motion.div>
         </Link>
-        <Link href="/dashboard/sales-details">
+        <Link href="/dashboard/products">
           <motion.div {...cardAnimation}>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -124,7 +183,7 @@ export default function DashboardPage() {
                 <Trophy className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-lg font-bold">Velvet Red Cake</div>
+                {isLoading ? <Skeleton className="h-7 w-40" /> : <div className="text-lg font-bold">{stats?.bestSellingProduct ?? "N/A"}</div>}
                 <p className="text-xs text-muted-foreground">
                   {currentDate || "Memuat tanggal..."}
                 </p>

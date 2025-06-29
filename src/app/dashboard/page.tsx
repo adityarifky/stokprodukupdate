@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { Activity, CakeSlice, Package, PackageCheck } from "lucide-react";
+import { Boxes, CakeSlice, Package, PackageCheck } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -80,11 +80,11 @@ export default function DashboardPage() {
         <motion.div {...cardAnimation}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Aktif Sekarang</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Total Stok Produk Lainnya</CardTitle>
+              <Boxes className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+573</div>
+              <div className="text-2xl font-bold">34</div>
               <p className="text-xs text-muted-foreground">
                 {currentDate || "Memuat tanggal..."}
               </p>

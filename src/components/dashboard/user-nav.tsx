@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -126,10 +127,10 @@ export function UserNav({
           {story && (
             <motion.p
               key={story}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ ease: "easeInOut", duration: 1.5 }}
+              exit={{ opacity: 0, y: -5 }}
+              transition={{ ease: "easeInOut", duration: 0.5 }}
               className="text-sm text-muted-foreground font-medium"
             >
               {story}

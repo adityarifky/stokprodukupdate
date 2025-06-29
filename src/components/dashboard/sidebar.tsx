@@ -39,30 +39,30 @@ export function DashboardSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <Link href="/dashboard" passHref>
-              <SidebarMenuButton asChild tooltip="Dashboard" isActive={pathname === '/dashboard'}>
+              <SidebarMenuButton asChild tooltip="Dasbor" isActive={pathname === '/dashboard'}>
                 <>
                   <Home />
-                  <span>Dashboard</span>
+                  <span>Dasbor</span>
                 </>
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <Link href="#" passHref>
-              <SidebarMenuButton asChild tooltip="Products">
+              <SidebarMenuButton asChild tooltip="Produk">
                  <>
                   <Package />
-                  <span>Products</span>
+                  <span>Produk</span>
                 </>
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
            <SidebarMenuItem>
             <Link href="#" passHref>
-              <SidebarMenuButton asChild tooltip="Reports">
+              <SidebarMenuButton asChild tooltip="Laporan">
                 <>
                   <BarChart2 />
-                  <span>Reports</span>
+                  <span>Laporan</span>
                 </>
               </SidebarMenuButton>
             </Link>
@@ -73,10 +73,10 @@ export function DashboardSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
              <Link href="#" passHref>
-              <SidebarMenuButton asChild tooltip="Settings">
+              <SidebarMenuButton asChild tooltip="Pengaturan">
                 <>
                   <Settings />
-                  <span>Settings</span>
+                  <span>Pengaturan</span>
                 </>
               </SidebarMenuButton>
             </Link>

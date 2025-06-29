@@ -23,10 +23,10 @@ export function ProductStockTable() {
         <Table>
             <TableHeader>
                 <TableRow>
-                    <TableHead>Dessert</TableHead>
-                    <TableHead className="hidden md:table-cell">Category</TableHead>
+                    <TableHead>Makanan Penutup</TableHead>
+                    <TableHead className="hidden md:table-cell">Kategori</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Stock</TableHead>
+                    <TableHead className="text-right">Stok</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -44,7 +44,7 @@ export function ProductStockTable() {
                         <TableCell className="hidden md:table-cell">{product.category}</TableCell>
                         <TableCell>
                              <Badge variant={product.stock > 20 ? 'outline' : product.stock > 0 ? 'secondary' : 'destructive'}>
-                                {product.stock > 20 ? 'In Stock' : product.stock > 0 ? 'Low Stock' : 'Out of Stock'}
+                                {product.stock > 20 ? 'Tersedia' : product.stock > 0 ? 'Stok Sedikit' : 'Stok Habis'}
                             </Badge>
                         </TableCell>
                         <TableCell className="text-right font-medium">{product.stock}</TableCell>

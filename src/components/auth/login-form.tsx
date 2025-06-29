@@ -20,8 +20,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Mail, Lock } from "lucide-react";
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(1, { message: "Password is required." }),
+  email: z.string().email({ message: "Silakan masukkan alamat email yang valid." }),
+  password: z.string().min(1, { message: "Kata sandi wajib diisi." }),
 });
 
 export function LoginForm() {
@@ -48,8 +48,8 @@ export function LoginForm() {
   return (
     <Card className="w-full shadow-lg border-2 border-amber-100/50">
       <CardHeader>
-        <CardTitle className="font-headline text-2xl tracking-tight">Account Login</CardTitle>
-        <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
+        <CardTitle>Masuk Akun</CardTitle>
+        <CardDescription>Masukkan kredensial Anda untuk mengakses dasbor Anda.</CardDescription>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -63,7 +63,7 @@ export function LoginForm() {
                   <FormControl>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="name@example.com" {...field} className="pl-10" suppressHydrationWarning />
+                      <Input placeholder="nama@contoh.com" {...field} className="pl-10" suppressHydrationWarning />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -75,7 +75,7 @@ export function LoginForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>Kata Sandi</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -89,10 +89,10 @@ export function LoginForm() {
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full" disabled={isLoading} suppressHydrationWarning>
-              {isLoading ? "Signing In..." : "Sign In"}
+              {isLoading ? "Masuk..." : "Masuk"}
             </Button>
             <Button variant="link" size="sm" className="w-full font-normal text-sm text-primary/90" suppressHydrationWarning>
-              Forgot your password?
+              Lupa kata sandi Anda?
             </Button>
           </CardFooter>
         </form>

@@ -11,18 +11,18 @@ import {
 } from "@/components/ui/chart"
 
 const chartData = [
-  { day: "Mon", sales: 1230 },
-  { day: "Tue", sales: 1543 },
-  { day: "Wed", sales: 980 },
-  { day: "Thu", sales: 2150 },
-  { day: "Fri", sales: 1765 },
-  { day: "Sat", sales: 2540 },
-  { day: "Sun", sales: 2310 },
+  { day: "Sen", sales: 1230 },
+  { day: "Sel", sales: 1543 },
+  { day: "Rab", sales: 980 },
+  { day: "Kam", sales: 2150 },
+  { day: "Jum", sales: 1765 },
+  { day: "Sab", sales: 2540 },
+  { day: "Min", sales: 2310 },
 ];
 
 const chartConfig = {
   sales: {
-    label: "Sales",
+    label: "Penjualan",
     color: "hsl(var(--primary))",
   },
 } satisfies ChartConfig

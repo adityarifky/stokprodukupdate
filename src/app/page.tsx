@@ -19,16 +19,16 @@ export default function LoginPage() {
           <div className="mb-4 flex items-center gap-3">
             <CakeSlice className="h-10 w-10 text-primary" />
             <h1 className="font-headline text-4xl font-bold tracking-tight text-primary">
-              SweetStock Insight
+              Wawasan SweetStock
             </h1>
           </div>
           <p className="max-w-xs text-muted-foreground">
-            Welcome back! Log in to manage your dessert inventory with ease and precision.
+            Selamat datang kembali! Masuk untuk mengelola inventaris makanan penutup Anda dengan mudah dan presisi.
           </p>
         </div>
         <LoginForm />
         <p className="mt-8 text-center text-xs text-muted-foreground">
-          {year ? `© ${year} SweetStock Insight. All Rights Reserved.` : `\u00A0`}
+          {year ? `© ${year} Wawasan SweetStock. Semua Hak Dilindungi.` : `\u00A0`}
         </p>
       </div>
     </main>

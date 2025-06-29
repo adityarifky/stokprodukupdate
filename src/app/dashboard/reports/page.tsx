@@ -154,8 +154,8 @@ export default function ReportsPage() {
         <main className="p-4 sm:px-6 md:p-8">
             <Card>
                 <CardHeader>
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                        <div className="flex-1">
+                    <div className="flex flex-col gap-4">
+                        <div>
                             <div className="flex items-center gap-2">
                                 <FileText className="h-6 w-6" />
                                 <CardTitle>Laporan Stok</CardTitle>
@@ -164,7 +164,7 @@ export default function ReportsPage() {
                                 Analisis penambahan dan pengurangan stok produk untuk periode yang dipilih.
                             </CardDescription>
                         </div>
-                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center sm:justify-end gap-2">
                             <Select value={filterType} onValueChange={handleFilterChange as (value: string) => void}>
                                 <SelectTrigger className="w-full sm:w-[180px]">
                                     <SelectValue placeholder="Pilih Tipe Laporan" />

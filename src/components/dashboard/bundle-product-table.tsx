@@ -186,7 +186,7 @@ export function BundleProductTable() {
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={4} className="h-24 text-center">
-                                        Belum ada bundel yang dibuat.
+                                        Belum ada bundling yang dibuat.
                                     </TableCell>
                                 </TableRow>
                             )}

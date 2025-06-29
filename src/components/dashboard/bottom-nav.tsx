@@ -20,9 +20,9 @@ const navItems = [
   { href: '/dashboard/update-stock', label: 'Update', icon: FileUp },
   { href: '/dashboard/stock-history', label: 'Riwayat', icon: FileClock },
   { href: '/dashboard/announcements', label: 'Pengumuman', icon: Megaphone },
-  { href: '/dashboard/users', label: 'Pengguna', icon: Users },
   { href: '/dashboard/user-activity', label: 'Aktivitas', icon: History },
   { href: '/dashboard/reports', label: 'Laporan', icon: FileText },
+  { href: '/dashboard/users', label: 'Pengguna', icon: Users },
 ];
 
 export function BottomNav({

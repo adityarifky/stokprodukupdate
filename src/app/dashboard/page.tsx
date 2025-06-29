@@ -37,7 +37,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         const today = new Date();
-        const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+        const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         setCurrentDate(today.toLocaleDateString('id-ID', options));
     }, []);
 

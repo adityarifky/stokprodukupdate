@@ -6,6 +6,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Skeleton } from "../ui/skeleton";
 import { ProfileSetupForm } from "./profile-setup-form";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export function ProfileSetupGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -61,9 +62,16 @@ export function ProfileSetupGuard({ children }: { children: React.ReactNode }) {
                 </div>
             </div>
             
-            <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+            <Dialog open={true} modal={true}>
+              <DialogContent
+                hideCloseButton
+                onEscapeKeyDown={(e) => e.preventDefault()}
+                onInteractOutside={(e) => e.preventDefault()}
+                className="bg-transparent p-0 border-none shadow-none w-full max-w-md flex items-center justify-center"
+              >
                 <ProfileSetupForm onComplete={handleProfileSetupComplete} />
-            </div>
+              </DialogContent>
+            </Dialog>
         </>
     );
   }

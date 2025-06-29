@@ -10,7 +10,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBKd3d9RFP-W8i7G9KwUmg7LKFoz9yCTck",
   authDomain: "produkstok-a7412.firebaseapp.com",
   projectId: "produkstok-a7412",
-  storageBucket: "produkstok-a7412.firebasestorage.app",
+  storageBucket: "produkstok-a7412.appspot.com",
   messagingSenderId: "908619745272",
   appId: "1:908619745272:web:ac622a5ed7f9cada4df80d",
 };

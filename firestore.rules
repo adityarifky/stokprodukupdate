@@ -1,13 +1,70 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Aturan ini mengizinkan semua pengguna yang sudah login (terotentikasi)
-    // untuk membaca dan menulis ke semua data di Firestore.
-    // Ini adalah pengaturan yang umum untuk tahap pengembangan dan prototipe,
-    // tapi perlu diperketat untuk lingkungan produksi.
+    // Aturan default: Membutuhkan otentikasi untuk semua akses.
+    // Ini adalah fallback yang aman.
     match /{document=**} {
       allow read, write: if request.auth != null;
+    }
+
+    // Aturan spesifik untuk koleksi 'users'
+    match /users/{userId} {
+      // Siapa pun yang sudah login dapat membaca profil pengguna.
+      allow read: if request.auth != null;
+      // Pengguna hanya dapat membuat dan memperbarui profil mereka sendiri.
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+      // Menghapus pengguna tidak diizinkan dari sisi klien.
+      allow delete: if false;
+    }
+
+    // Aturan spesifik untuk 'products' dan 'bundles'
+    match /products/{productId} {
+      // Siapa pun yang login bisa membaca dan menulis produk.
+      // Untuk produksi, pertimbangkan untuk membatasi 'write' ke peran tertentu.
+      allow read, write: if request.auth != null;
+    }
+
+    match /bundles/{bundleId} {
+      // Siapa pun yang login bisa membaca dan menulis bundel.
+      allow read, write: if request.auth != null;
+    }
+
+    // Aturan spesifik untuk 'stock_history'
+    match /stock_history/{historyId} {
+      // Siapa pun yang login bisa membaca riwayat stok.
+      allow read: if request.auth != null;
+      // Pengguna yang login dapat membuat entri riwayat baru.
+      allow create: if request.auth != null;
+      // Riwayat tidak dapat diubah atau dihapus setelah dibuat.
+      allow update, delete: if false;
+    }
+
+    // Aturan spesifik untuk 'user-activity'
+    match /user-activity/{activityId} {
+      // Siapa pun yang login bisa membaca aktivitas pengguna.
+      allow read: if request.auth != null;
+      // Pengguna yang login dapat membuat log aktivitas.
+      allow create: if request.auth != null;
+      // Log aktivitas tidak dapat diubah atau dihapus.
+      allow update, delete: if false;
+    }
+
+    // Aturan spesifik untuk 'chats'
+    match /chats/{chatId} {
+      // Pengguna dapat membaca/menulis dokumen chat jika mereka adalah peserta.
+      allow read, write: if request.auth != null && request.auth.uid in resource.data.participants;
+    }
+
+    // Aturan spesifik untuk pesan di dalam chat
+    match /chats/{chatId}/messages/{messageId} {
+      // Pengguna dapat membaca pesan jika mereka adalah peserta chat.
+      allow read: if request.auth != null && get(/databases/$(database)/documents/chats/$(chatId)).data.participants[request.auth.uid] != null;
+      // Pengguna dapat mengirim pesan jika mereka adalah pengirim dan peserta chat.
+      allow create: if request.auth != null && request.resource.data.senderId == request.auth.uid && get(/databases/$(database)/documents/chats/$(chatId)).data.participants[request.auth.uid] != null;
+      // Pesan tidak dapat diubah atau dihapus.
+      allow update, delete: if false;
     }
   }
 }

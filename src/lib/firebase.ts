@@ -15,24 +15,10 @@ const firebaseConfig = {
   appId: "1:908619745272:web:ac622a5ed7f9cada4df80d",
 };
 
-let app: FirebaseApp | null = null;
-let auth: Auth | null = null;
-let db: Firestore | null = null;
-let storage: Storage | null = null;
-
-// Inisialisasi Firebase hanya jika kunci API ada.
-// Ini mencegah error jika variabel lingkungan tidak diatur.
-if (firebaseConfig.apiKey) {
-  try {
-    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    auth = getAuth(app);
-    db = getFirestore(app);
-    storage = getStorage(app);
-  } catch (e) {
-    console.error("Gagal menginisialisasi Firebase. Periksa konfigurasi Anda.", e);
-  }
-} else {
-  console.warn("Kunci API Firebase hilang. Fitur terkait Firebase akan dinonaktifkan. Harap tambahkan kredensial Anda ke file .env.local dan restart server pengembangan Anda.");
-}
+// Inisialisasi Firebase menggunakan pola singleton untuk mencegah inisialisasi ganda
+const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const auth: Auth = getAuth(app);
+const db: Firestore = getFirestore(app);
+const storage: Storage = getStorage(app);
 
 export { app, auth, db, storage };

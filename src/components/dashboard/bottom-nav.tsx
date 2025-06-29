@@ -2,21 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Package, History, Users } from "lucide-react";
+import { Home, Package, History, Users, FileUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "../ui/button";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/dashboard/products", label: "Produk", icon: Package },
+  { href: "/dashboard/products/add", label: "Update", icon: FileUp },
   { href: "/dashboard/user-activity", label: "Aktivitas", icon: History },
   { href: "/dashboard/users", label: "Pengguna", icon: Users },
 ];

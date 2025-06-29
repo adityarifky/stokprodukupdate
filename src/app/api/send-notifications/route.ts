@@ -1,5 +1,3 @@
-'use server';
-
 import { NextResponse } from 'next/server';
 import admin from 'firebase-admin';
 import { getApps } from 'firebase-admin/app';

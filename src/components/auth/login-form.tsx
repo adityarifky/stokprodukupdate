@@ -63,7 +63,7 @@ export function LoginForm() {
                   <FormControl>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="name@example.com" {...field} className="pl-10" />
+                      <Input placeholder="name@example.com" {...field} className="pl-10" suppressHydrationWarning />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -79,7 +79,7 @@ export function LoginForm() {
                   <FormControl>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input type="password" placeholder="••••••••" {...field} className="pl-10" />
+                      <Input type="password" placeholder="••••••••" {...field} className="pl-10" suppressHydrationWarning />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -88,10 +88,10 @@ export function LoginForm() {
             />
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading} suppressHydrationWarning>
               {isLoading ? "Signing In..." : "Sign In"}
             </Button>
-            <Button variant="link" size="sm" className="w-full font-normal text-sm text-primary/90">
+            <Button variant="link" size="sm" className="w-full font-normal text-sm text-primary/90" suppressHydrationWarning>
               Forgot your password?
             </Button>
           </CardFooter>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -10,12 +11,21 @@ import {
 import { Overview } from "@/components/dashboard/overview";
 import { LatestAnnouncements } from "@/components/dashboard/latest-announcements";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query, DocumentData } from "firebase/firestore";
+import { collection, onSnapshot, query, DocumentData, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Utensils, Cake, Layers, CupSoda, Package, ShoppingBasket, Megaphone } from "lucide-react";
+import { Utensils, Cake, Layers, CupSoda, Package, ShoppingBasket, Megaphone, Calendar as CalendarIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import type { DateRange } from "react-day-picker";
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
+import { id } from "date-fns/locale";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+
 
 const categories = [
   { name: 'Creampuff', icon: Utensils },
@@ -42,6 +52,30 @@ export default function DashboardPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingChart, setIsLoadingChart] = useState(true);
     const [currentDate, setCurrentDate] = useState<string>('');
+    const [filterType, setFilterType] = useState('weekly');
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
+        from: startOfWeek(new Date(), { locale: id }),
+        to: endOfWeek(new Date(), { locale: id }),
+    });
+
+    const handleFilterChange = (value: string) => {
+        setFilterType(value);
+        const now = new Date();
+        if (value === 'daily') {
+            setDateRange({ from: startOfDay(now), to: endOfDay(now) });
+        } else if (value === 'weekly') {
+            setDateRange({ from: startOfWeek(now, { locale: id }), to: endOfWeek(now, { locale: id }) });
+        } else if (value === 'monthly') {
+            setDateRange({ from: startOfMonth(now), to: endOfMonth(now) });
+        }
+    };
+
+    const handleDateSelect = (range: DateRange | undefined) => {
+        setDateRange(range);
+        if (range) {
+            setFilterType('custom');
+        }
+    };
 
     useEffect(() => {
         const today = new Date();
@@ -82,12 +116,21 @@ export default function DashboardPage() {
     }, []);
 
     useEffect(() => {
-        if (!db) {
+        if (!db || !dateRange?.from) {
             setIsLoadingChart(false);
             return;
         }
 
-        const q = query(collection(db, "stock_history"));
+        setIsLoadingChart(true);
+        
+        const fromDate = startOfDay(dateRange.from);
+        const toDate = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
+
+        const q = query(
+            collection(db, "stock_history"),
+            where("timestamp", ">=", fromDate),
+            where("timestamp", "<=", toDate)
+        );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const aggregatedData: { [productName: string]: { added: number; subtracted: number } } = {};
@@ -119,7 +162,7 @@ export default function DashboardPage() {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [dateRange]);
 
     const renderStockCount = (categoryName: string) => {
         if (isLoading) {
@@ -182,23 +225,77 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle className="font-headline">Ringkasan Grafik Stok</CardTitle>
-             <CardDescription>
-              Grafik aktivitas stok masuk dan keluar untuk 7 produk teratas.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pl-2">
-            {isLoadingChart ? (
-                <div className="flex justify-center items-center min-h-[240px]">
-                    <Skeleton className="h-full w-full" />
+            <CardHeader>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                    <div className="flex-1">
+                        <CardTitle className="font-headline">Ringkasan Grafik Stok</CardTitle>
+                        <CardDescription>
+                          Grafik aktivitas stok masuk dan keluar untuk 7 produk teratas.
+                        </CardDescription>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <Select value={filterType} onValueChange={handleFilterChange}>
+                            <SelectTrigger className="w-full sm:w-[120px]">
+                                <SelectValue placeholder="Pilih Rentang" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="daily">Harian</SelectItem>
+                                <SelectItem value="weekly">Mingguan</SelectItem>
+                                <SelectItem value="monthly">Bulanan</SelectItem>
+                                <SelectItem value="custom">Custom</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    id="date"
+                                    variant={"outline"}
+                                    className={cn(
+                                        "w-full sm:w-[260px] justify-start text-left font-normal",
+                                        !dateRange && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {dateRange?.from ? (
+                                        dateRange.to ? (
+                                            <>
+                                                {format(dateRange.from, "d LLL y", { locale: id })} - {format(dateRange.to, "d LLL y", { locale: id })}
+                                            </>
+                                        ) : (
+                                            format(dateRange.from, "d LLL y", { locale: id })
+                                        )
+                                    ) : (
+                                        <span>Pilih tanggal</span>
+                                    )}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="end">
+                                <Calendar
+                                    initialFocus
+                                    mode="range"
+                                    defaultMonth={dateRange?.from}
+                                    selected={dateRange}
+                                    onSelect={handleDateSelect}
+                                    numberOfMonths={2}
+                                    locale={id}
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
                 </div>
-            ) : (
-                <Overview data={stockChartData} />
-            )}
-          </CardContent>
+            </CardHeader>
+            <CardContent className="pl-2">
+                {isLoadingChart ? (
+                    <div className="flex justify-center items-center min-h-[240px]">
+                        <Skeleton className="h-full w-full" />
+                    </div>
+                ) : (
+                    <Overview data={stockChartData} />
+                )}
+            </CardContent>
         </Card>
       </div>
     </main>
   );
 }
+

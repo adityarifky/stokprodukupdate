@@ -19,14 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 
-const products = [
-    { id: '1', name: 'Velvet Red Cake', category: 'Cakes', price: 'Rp 250.000', stock: 15, image: 'https://placehold.co/64x64.png', aiHint: 'red cake' },
-    { id: '2', name: 'Chocolate Lava Cake', category: 'Cakes', price: 'Rp 45.000', stock: 25, image: 'https://placehold.co/64x64.png', aiHint: 'chocolate cake' },
-    { id: '3', name: 'Macarons (Box of 6)', category: 'Pastries', price: 'Rp 90.000', stock: 50, image: 'https://placehold.co/64x64.png', aiHint: 'colorful macarons' },
-    { id: '4', name: 'Classic Tiramisu', category: 'Pudding', price: 'Rp 55.000', stock: 5, image: 'https://placehold.co/64x64.png', aiHint: 'tiramisu slice' },
-    { id: '5', name: 'Lemon Meringue Tart', category: 'Tarts', price: 'Rp 60.000', stock: 0, image: 'https://placehold.co/64x64.png', aiHint: 'lemon tart' },
-    { id: '6', name: 'Strawberry Cheesecake', category: 'Cheesecakes', price: 'Rp 275.000', stock: 32, image: 'https://placehold.co/64x64.png', aiHint: 'strawberry cheesecake' },
-]
+const products: any[] = []
 
 export default function ProductsPage() {
     return (
@@ -60,24 +53,32 @@ export default function ProductsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {products.map((product) => (
-                                <TableRow key={product.id}>
-                                    <TableCell className="hidden sm:table-cell">
-                                        <Avatar className="h-10 w-10 rounded-md">
-                                            <AvatarImage src={product.image} alt={product.name} data-ai-hint={product.aiHint}/>
-                                            <AvatarFallback className="rounded-md">{product.name.charAt(0)}</AvatarFallback>
-                                        </Avatar>
+                            {products.length > 0 ? (
+                                products.map((product) => (
+                                    <TableRow key={product.id}>
+                                        <TableCell className="hidden sm:table-cell">
+                                            <Avatar className="h-10 w-10 rounded-md">
+                                                <AvatarImage src={product.image} alt={product.name} data-ai-hint={product.aiHint}/>
+                                                <AvatarFallback className="rounded-md">{product.name.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                        </TableCell>
+                                        <TableCell className="font-medium">{product.name}</TableCell>
+                                        <TableCell>
+                                            <Badge variant={product.stock > 20 ? 'outline' : product.stock > 0 ? 'secondary' : 'destructive'}>
+                                                {product.stock > 20 ? 'Tersedia' : product.stock > 0 ? 'Stok Sedikit' : 'Stok Habis'}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="hidden md:table-cell">{product.price}</TableCell>
+                                        <TableCell className="text-right font-medium">{product.stock}</TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-24 text-center">
+                                        Tidak ada produk untuk ditampilkan.
                                     </TableCell>
-                                    <TableCell className="font-medium">{product.name}</TableCell>
-                                    <TableCell>
-                                        <Badge variant={product.stock > 20 ? 'outline' : product.stock > 0 ? 'secondary' : 'destructive'}>
-                                            {product.stock > 20 ? 'Tersedia' : product.stock > 0 ? 'Stok Sedikit' : 'Stok Habis'}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="hidden md:table-cell">{product.price}</TableCell>
-                                    <TableCell className="text-right font-medium">{product.stock}</TableCell>
                                 </TableRow>
-                            ))}
+                            )}
                         </TableBody>
                     </Table>
                 </CardContent>

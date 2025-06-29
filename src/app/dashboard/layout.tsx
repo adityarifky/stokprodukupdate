@@ -6,7 +6,6 @@ import { ProfileSetupForm } from "@/components/auth/profile-setup-form";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth, db, messaging } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
@@ -19,7 +18,8 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 function DashboardAppLayout({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
-  
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   const { user, userProfile, loading } = useAuth();
   
   // Profile is considered complete if the userProfile object exists.
@@ -75,21 +75,40 @@ function DashboardAppLayout({ children }: { children: React.ReactNode }) {
     };
   }, [toast, user, userProfile]);
 
-  const handleLogout = async () => {
-    try {
-      if (auth.currentUser && db) {
-        const userDocRef = doc(db, "users", auth.currentUser.uid);
-        await updateDoc(userDocRef, {
-            status: 'offline',
-            fcmToken: ""
-        });
-      }
-      await signOut(auth);
-      // The auth provider will handle redirecting to '/'
-    } catch (error) {
-      console.error("Gagal keluar:", error);
-    }
+  const handleLogout = () => {
+    // This now triggers the logout process.
+    // It causes this component to re-render and show the "Logging out..." screen.
+    // This unmounts the children, which cleans up all Firestore listeners.
+    // The useEffect hook below will then handle the actual logout logic safely.
+    setIsLoggingOut(true);
   };
+
+  useEffect(() => {
+    // This effect runs ONLY when isLoggingOut becomes true.
+    if (isLoggingOut) {
+      const performLogout = async () => {
+        try {
+          if (auth.currentUser && db) {
+            const userDocRef = doc(db, "users", auth.currentUser.uid);
+            await updateDoc(userDocRef, {
+                status: 'offline',
+                fcmToken: ""
+            });
+          }
+          await signOut(auth);
+          // The onAuthStateChanged listener in AuthProvider will handle the redirect.
+        } catch (error) {
+          console.error("Gagal keluar:", error);
+          // As a fallback, still try to sign out.
+          if (auth.currentUser) {
+            signOut(auth).catch(e => console.error("Gagal keluar saat fallback:", e));
+          }
+        }
+      };
+      
+      performLogout();
+    }
+  }, [isLoggingOut]);
 
   if (loading) {
     return (
@@ -100,6 +119,17 @@ function DashboardAppLayout({ children }: { children: React.ReactNode }) {
         <div className="grid grid-cols-1 gap-4 md:gap-8">
             <Skeleton className="h-96 rounded-lg" />
             <Skeleton className="h-96 rounded-lg" />
+        </div>
+      </div>
+    );
+  }
+  
+  if (isLoggingOut) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="text-center space-y-2">
+          <h1 className="text-xl font-semibold">Anda sedang keluar...</h1>
+          <p className="text-muted-foreground">Sesi Anda sedang dibersihkan.</p>
         </div>
       </div>
     );

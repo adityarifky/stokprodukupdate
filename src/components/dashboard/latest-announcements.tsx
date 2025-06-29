@@ -1,16 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot, Timestamp, limit } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BellRing } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
+import { Separator } from '../ui/separator';
 
 interface Announcement {
     id: string;
     title: string;
+    content: string;
+    author: string;
     timestamp: string;
 }
 
@@ -33,7 +36,9 @@ export function LatestAnnouncements() {
                 return {
                     id: doc.id,
                     title: data.title || 'Tanpa Judul',
-                    timestamp: timestamp ? new Date(timestamp.seconds * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A',
+                    content: data.content || '',
+                    author: data.author || 'Admin',
+                    timestamp: timestamp ? new Date(timestamp.seconds * 1000).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' }) : 'N/A',
                 };
             });
             setAnnouncements(announcementsData);
@@ -48,13 +53,14 @@ export function LatestAnnouncements() {
 
     if (isLoading) {
         return (
-            <div className="space-y-4">
-                {[...Array(3)].map((_, i) => (
-                    <div key={i} className="flex items-center gap-4 p-2">
-                        <Skeleton className="h-8 w-8 rounded-full" />
-                        <div className="space-y-2 flex-1">
-                            <Skeleton className="h-4 w-3/4" />
-                            <Skeleton className="h-3 w-1/2" />
+            <div className="space-y-6">
+                {[...Array(2)].map((_, i) => (
+                    <div key={i} className="space-y-3">
+                        <Skeleton className="h-6 w-3/4 rounded-md" />
+                        <Skeleton className="h-4 w-1/2 rounded-md" />
+                        <div className="space-y-2 pt-2">
+                           <Skeleton className="h-4 w-full rounded-md" />
+                           <Skeleton className="h-4 w-5/6 rounded-md" />
                         </div>
                     </div>
                 ))}
@@ -74,19 +80,22 @@ export function LatestAnnouncements() {
 
     return (
         <div className="space-y-6">
-            <ul className="space-y-2">
-                {announcements.map((announcement) => (
-                    <li key={announcement.id} className="flex items-start gap-4 p-2 hover:bg-muted/50 rounded-lg">
-                        <div className="mt-1 p-2 bg-secondary rounded-full">
-                           <BellRing className="h-4 w-4 text-secondary-foreground" />
+            <div className="space-y-6">
+                {announcements.map((announcement, index) => (
+                   <React.Fragment key={announcement.id}>
+                        {index > 0 && <Separator />}
+                        <div>
+                            <h3 className="font-semibold leading-snug">{announcement.title}</h3>
+                            <p className="text-xs text-muted-foreground mb-3">
+                                {`Diterbitkan oleh ${announcement.author} pada ${announcement.timestamp}`}
+                            </p>
+                            <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap">
+                                {announcement.content}
+                            </div>
                         </div>
-                        <div className="flex-1">
-                            <p className="font-semibold leading-snug">{announcement.title}</p>
-                            <p className="text-xs text-muted-foreground">{announcement.timestamp}</p>
-                        </div>
-                    </li>
+                   </React.Fragment>
                 ))}
-            </ul>
+            </div>
              <Button asChild variant="outline" className="w-full">
                 <Link href="/dashboard/announcements">
                     Lihat Semua Pengumuman

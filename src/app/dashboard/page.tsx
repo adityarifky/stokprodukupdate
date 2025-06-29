@@ -1,4 +1,4 @@
-import { Activity, DollarSign, Package, CreditCard } from "lucide-react";
+import { Activity, CakeSlice, Package, CreditCard } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -15,13 +15,13 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Pendapatan</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Total Produk Terdaftar</CardTitle>
+            <CakeSlice className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
+            <div className="text-2xl font-bold">6</div>
             <p className="text-xs text-muted-foreground">
-              +20.1% dari bulan lalu
+              Total produk yang dikelola
             </p>
           </CardContent>
         </Card>

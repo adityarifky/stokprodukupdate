@@ -6,7 +6,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Skeleton } from "../ui/skeleton";
 import { ProfileSetupForm } from "./profile-setup-form";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export function ProfileSetupGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -69,6 +69,10 @@ export function ProfileSetupGuard({ children }: { children: React.ReactNode }) {
                 onInteractOutside={(e) => e.preventDefault()}
                 className="bg-transparent p-0 border-none shadow-none w-full max-w-md flex items-center justify-center"
               >
+                <DialogHeader className="sr-only">
+                  <DialogTitle>Absen dulu ya guys</DialogTitle>
+                  <DialogDescription>Sebelum melanjutkan, dimohon untuk berikan nama dan posisi yang sesuai yess.</DialogDescription>
+                </DialogHeader>
                 <ProfileSetupForm onComplete={handleProfileSetupComplete} />
               </DialogContent>
             </Dialog>

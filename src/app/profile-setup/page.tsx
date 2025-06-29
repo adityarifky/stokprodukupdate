@@ -83,7 +83,7 @@ export default function ProfileSetupPage() {
                       <FormControl>
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input placeholder="Nama lengkap Anda" className="pl-10" {...field} />
+                          <Input placeholder="Nama lengkap Anda" className="pl-10" {...field} suppressHydrationWarning />
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -100,7 +100,7 @@ export default function ProfileSetupPage() {
                         <FormControl>
                           <div className="relative">
                             <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                             <SelectTrigger className="pl-10">
+                             <SelectTrigger className="pl-10" suppressHydrationWarning>
                                 <SelectValue placeholder="Pilih posisi Anda" />
                              </SelectTrigger>
                           </div>
@@ -117,7 +117,7 @@ export default function ProfileSetupPage() {
                 />
               </CardContent>
               <CardFooter>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full" disabled={isLoading} suppressHydrationWarning>
                   {isLoading ? "Menyimpan..." : "Simpan dan Lanjutkan"}
                 </Button>
               </CardFooter>

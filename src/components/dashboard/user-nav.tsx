@@ -41,7 +41,8 @@ const greetings = [
 ];
 
 export function UserNav() {
-  const [name, setName] = React.useState("Sweet Delights");
+  const [name, setName] = React.useState("");
+  const [position, setPosition] = React.useState("");
   const [tempName, setTempName] = React.useState(name);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [greeting, setGreeting] = React.useState("");
@@ -51,7 +52,6 @@ export function UserNav() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isImageViewerOpen, setImageViewerOpen] = React.useState(false);
 
-  // States for image cropper
   const [imageToCrop, setImageToCrop] = React.useState<string | null>(null);
   const [isCropperOpen, setIsCropperOpen] = React.useState(false);
   const [crop, setCrop] = React.useState({ x: 0, y: 0 });
@@ -70,6 +70,10 @@ export function UserNav() {
   }, []);
 
   React.useEffect(() => {
+    const storedName = localStorage.getItem("userName");
+    const storedPosition = localStorage.getItem("userPosition");
+    if (storedName) setName(storedName);
+    if (storedPosition) setPosition(storedPosition);
     selectRandomGreeting();
   }, [selectRandomGreeting]);
 
@@ -84,6 +88,7 @@ export function UserNav() {
 
   const handleProfileSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+    localStorage.setItem('userName', tempName);
     setName(tempName);
     setAvatarUrl(tempAvatarUrl);
     selectRandomGreeting();
@@ -172,9 +177,9 @@ export function UserNav() {
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{name}</p>
+                <p className="text-sm font-medium leading-none">{name || "Pengguna"}</p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  {greeting}
+                  {position || "Posisi"}
                 </p>
               </div>
             </DropdownMenuLabel>

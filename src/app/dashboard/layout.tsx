@@ -2,6 +2,7 @@ import { UserNav } from "@/components/dashboard/user-nav";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import Link from "next/link";
 import Image from "next/image";
+import { ProfileSetupGuard } from "@/components/auth/profile-setup-guard";
 
 export default function DashboardLayout({
   children,
@@ -24,7 +25,9 @@ export default function DashboardLayout({
           <UserNav />
         </div>
       </header>
-      <main className="flex flex-1 flex-col">{children}</main>
+      <main className="flex flex-1 flex-col">
+        <ProfileSetupGuard>{children}</ProfileSetupGuard>
+      </main>
       <BottomNav />
     </div>
   );

@@ -51,7 +51,6 @@ export default function ProductsPage() {
                                 </TableHead>
                                 <TableHead>Nama</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead className="hidden md:table-cell">Harga</TableHead>
                                 <TableHead className="text-right">Stok</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -71,13 +70,12 @@ export default function ProductsPage() {
                                                 {product.stock > 20 ? 'Tersedia' : product.stock > 0 ? 'Stok Sedikit' : 'Stok Habis'}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="hidden md:table-cell">{product.price}</TableCell>
                                         <TableCell className="text-right font-medium">{product.stock}</TableCell>
                                     </TableRow>
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">
+                                    <TableCell colSpan={4} className="h-24 text-center">
                                         Tidak ada produk untuk ditampilkan.
                                     </TableCell>
                                 </TableRow>

@@ -31,9 +31,8 @@ import Image from "next/image";
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nama produk harus memiliki setidaknya 2 karakter." }),
   description: z.string().optional(),
-  price: z.coerce.number().min(0, { message: "Harga tidak boleh negatif." }),
   stock: z.coerce.number().int().min(0, { message: "Stok tidak boleh negatif." }),
-  category: z.enum(["Creampuff", "Minuman", "Kue", "Lainnya"], {
+  category: z.enum(["Creampuff", "Cheesecake", "Millecrepes", "Minuman", "Snackbox", "Lainnya"], {
     required_error: "Anda harus memilih kategori.",
   }),
   image: z.any().optional(),
@@ -51,7 +50,6 @@ export function AddProductForm() {
         defaultValues: {
             name: "",
             description: "",
-            price: 0,
             stock: 0,
         },
     });
@@ -135,8 +133,10 @@ export function AddProductForm() {
                                         </FormControl>
                                         <SelectContent>
                                             <SelectItem value="Creampuff">Creampuff</SelectItem>
+                                            <SelectItem value="Cheesecake">Cheesecake</SelectItem>
+                                            <SelectItem value="Millecrepes">Millecrepes</SelectItem>
                                             <SelectItem value="Minuman">Minuman</SelectItem>
-                                            <SelectItem value="Kue">Kue</SelectItem>
+                                            <SelectItem value="Snackbox">Snackbox</SelectItem>
                                             <SelectItem value="Lainnya">Lainnya</SelectItem>
                                         </SelectContent>
                                     </Select>
@@ -144,34 +144,19 @@ export function AddProductForm() {
                                 </FormItem>
                             )}
                         />
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <FormField
-                                control={form.control}
-                                name="price"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Harga (Rp)</FormLabel>
-                                        <FormControl>
-                                            <Input type="number" placeholder="cth. 25000" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="stock"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Stok Awal</FormLabel>
-                                        <FormControl>
-                                            <Input type="number" placeholder="cth. 50" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
+                        <FormField
+                            control={form.control}
+                            name="stock"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Stok Awal</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" placeholder="cth. 50" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                     </div>
                     <div className="lg:col-span-1">
                         <FormField

@@ -10,23 +10,36 @@ if (!getApps().length) {
 
 export async function POST(request: Request) {
   try {
-    const { title, content } = await request.json();
+    const { title, content, targetUserId, excludeUserId, link } = await request.json();
 
     if (!title || !content) {
       return NextResponse.json({ success: false, error: 'Judul atau konten tidak ditemukan' }, { status: 400 });
     }
 
     const db = admin.firestore();
-    const usersSnapshot = await db.collection('users').get();
-    
     const tokens: string[] = [];
-    usersSnapshot.forEach(doc => {
-      const userData = doc.data();
-      // Pastikan pengguna memiliki token FCM yang valid
-      if (userData.fcmToken) {
-        tokens.push(userData.fcmToken);
-      }
-    });
+
+    if (targetUserId) {
+        const userDoc = await db.collection('users').doc(targetUserId).get();
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            if (userData && userData.fcmToken) {
+                tokens.push(userData.fcmToken);
+            }
+        }
+    } else {
+        const usersSnapshot = await db.collection('users').get();
+        usersSnapshot.forEach(doc => {
+          if (doc.id === excludeUserId) {
+              return;
+          }
+          const userData = doc.data();
+          // Pastikan pengguna memiliki token FCM yang valid
+          if (userData.fcmToken) {
+            tokens.push(userData.fcmToken);
+          }
+        });
+    }
 
     if (tokens.length === 0) {
       return NextResponse.json({ success: true, message: 'Tidak ada pengguna dengan token notifikasi.' });
@@ -39,7 +52,7 @@ export async function POST(request: Request) {
       },
       webpush: {
         fcm_options: {
-          link: '/dashboard/announcements'
+          link: link || '/dashboard/announcements'
         }
       },
       tokens: tokens,

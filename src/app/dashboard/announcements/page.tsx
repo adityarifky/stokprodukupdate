@@ -179,7 +179,7 @@ export default function AnnouncementsPage() {
                                                 <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap p-4 border bg-background rounded-lg shadow-inner">
                                                     {announcement.content}
                                                 </div>
-                                                <AnnouncementReplies announcementId={announcement.id} />
+                                                <AnnouncementReplies announcementId={announcement.id} announcementTitle={announcement.title} />
                                             </div>
                                         </AccordionContent>
                                     </AccordionItem>

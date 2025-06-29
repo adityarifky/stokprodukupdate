@@ -111,6 +111,17 @@ export function ChatDialog({ currentUser, otherUser, open, onOpenChange }: ChatD
         
         await setDoc(chatDocRef, { lastMessageTimestamp: serverTimestamp() }, { merge: true });
 
+        fetch('/api/send-notifications', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: `Pesan baru dari ${currentUser.name}`,
+                content: newMessage,
+                targetUserId: otherUser.id,
+                link: '/dashboard/users'
+            })
+        }).catch(err => console.error("Gagal mengirim notifikasi chat:", err));
+
         setNewMessage('');
     } catch (error) {
         console.error("Error sending message:", error);

@@ -23,7 +23,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp, doc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
@@ -96,6 +96,17 @@ export function AnnouncementFormDialog({ isOpen, onOpenChange, announcement }: A
                     timestamp: serverTimestamp(),
                 });
                 toast({ title: "Pengumuman Berhasil Diperbarui" });
+
+                // Kirim notifikasi untuk pembaruan
+                fetch('/api/send-notifications', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        title: `Pengumuman Diperbarui: ${values.title}`,
+                        content: `Cek pembaruan dari ${userName}.`,
+                        excludeUserId: auth.currentUser?.uid, // Tidak notifikasi diri sendiri
+                    }),
+                }).catch(err => console.error("Gagal mengirim notifikasi:", err));
             } else {
                 await addDoc(collection(db, "announcements"), {
                     ...values,
@@ -110,7 +121,8 @@ export function AnnouncementFormDialog({ isOpen, onOpenChange, announcement }: A
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         title: `Pengumuman Baru: ${values.title}`,
-                        content: `Cek pengumuman baru dari ${userName}.`
+                        content: `Cek pengumuman baru dari ${userName}.`,
+                        excludeUserId: auth.currentUser?.uid, // Tidak notifikasi diri sendiri
                     }),
                 }).catch(err => console.error("Gagal mengirim notifikasi:", err));
             }

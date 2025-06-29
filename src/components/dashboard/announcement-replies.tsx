@@ -22,9 +22,10 @@ interface Reply {
 
 interface AnnouncementRepliesProps {
     announcementId: string;
+    announcementTitle: string;
 }
 
-export function AnnouncementReplies({ announcementId }: AnnouncementRepliesProps) {
+export function AnnouncementReplies({ announcementId, announcementTitle }: AnnouncementRepliesProps) {
     const [replies, setReplies] = useState<Reply[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [newReply, setNewReply] = useState('');
@@ -77,6 +78,18 @@ export function AnnouncementReplies({ announcementId }: AnnouncementRepliesProps
                 authorAvatar: avatarUrl,
                 timestamp: serverTimestamp(),
             });
+
+            fetch('/api/send-notifications', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    title: `Balasan Baru di "${announcementTitle}"`,
+                    content: `${userName} membalas: "${newReply.substring(0, 50)}..."`,
+                    link: '/dashboard/announcements',
+                    excludeUserId: auth.currentUser.uid,
+                }),
+            }).catch(err => console.error("Gagal mengirim notifikasi:", err));
+
             setNewReply('');
         } catch (error) {
             console.error("Error adding reply:", error);

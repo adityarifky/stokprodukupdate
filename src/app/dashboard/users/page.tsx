@@ -102,7 +102,7 @@ export default function UsersStatusPage() {
                   <TableRow>
                     <TableHead>Pengguna</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Aksi</TableHead>
+                    <TableHead className="text-center">Curhat?</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -120,7 +120,7 @@ export default function UsersStatusPage() {
                             </div>
                           </TableCell>
                           <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                          <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
+                          <TableCell className="text-center"><Skeleton className="h-8 w-20 mx-auto" /></TableCell>
                         </TableRow>
                       ))}
                     </>
@@ -159,14 +159,14 @@ export default function UsersStatusPage() {
                               <span className="text-sm text-muted-foreground">{user.status}</span>
                             </div>
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-center">
                               <Button 
                                   variant="outline" 
                                   size="sm" 
                                   onClick={() => setChattingWith(user)}
                                   disabled={isCurrentUser}
                               >
-                                  Pesan
+                                  Curhat
                               </Button>
                           </TableCell>
                         </TableRow>

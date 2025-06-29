@@ -14,6 +14,7 @@ import { collection, onSnapshot, query, DocumentData } from "firebase/firestore"
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Utensils, Cake, Layers, CupSoda, Package, ShoppingBasket } from "lucide-react";
+import { motion } from "framer-motion";
 
 const categories = [
   { name: 'Creampuff', icon: Utensils },
@@ -76,18 +77,25 @@ export default function DashboardPage() {
     <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-6">
         {categories.map((category) => (
-            <Card key={category.name}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{category.name}</CardTitle>
-                <category.icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                {renderStockCount(category.name)}
-                <p className="text-xs text-muted-foreground">
-                    Total stok tersedia.
-                </p>
-              </CardContent>
-            </Card>
+            <motion.div
+              key={category.name}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{category.name}</CardTitle>
+                  <category.icon className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  {renderStockCount(category.name)}
+                  <p className="text-xs text-muted-foreground">
+                      Total stok tersedia.
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
         ))}
       </div>
       <div className="grid grid-cols-1 gap-4 md:gap-8 lg:grid-cols-3">

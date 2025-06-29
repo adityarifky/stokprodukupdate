@@ -86,11 +86,6 @@ export default function DashboardPage() {
     whileHover: { scale: 1.05, transition: { type: "spring", stiffness: 400, damping: 10 } },
     whileTap: { scale: 0.95 },
   };
-  
-  const overlayVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.3, ease: "easeIn" } },
-  };
 
   const renderStat = (value: number | undefined) => {
     if (isLoading) return <Skeleton className="h-8 w-16" />;
@@ -103,8 +98,6 @@ export default function DashboardPage() {
         <Link href="/dashboard/products">
           <motion.div 
             className="relative"
-            initial="hidden"
-            whileHover="visible"
             {...cardAnimation}
           >
             <Card>
@@ -119,19 +112,16 @@ export default function DashboardPage() {
                 </p>
               </CardContent>
             </Card>
-            <motion.div
-              variants={overlayVariants}
+            <div
               className="absolute bottom-2 right-3 text-xs text-muted-foreground pointer-events-none"
             >
               Klik untuk melihat detail
-            </motion.div>
+            </div>
           </motion.div>
         </Link>
         <Link href="/dashboard/products">
           <motion.div 
             className="relative"
-            initial="hidden"
-            whileHover="visible"
             {...cardAnimation}
           >
             <Card>
@@ -146,19 +136,16 @@ export default function DashboardPage() {
                 </p>
               </CardContent>
             </Card>
-            <motion.div
-              variants={overlayVariants}
+            <div
               className="absolute bottom-2 right-3 text-xs text-muted-foreground pointer-events-none"
             >
               Klik untuk melihat detail
-            </motion.div>
+            </div>
           </motion.div>
         </Link>
         <Link href="/dashboard/products">
           <motion.div 
             className="relative"
-            initial="hidden"
-            whileHover="visible"
             {...cardAnimation}
           >
               <Card>
@@ -173,19 +160,16 @@ export default function DashboardPage() {
                   </p>
                 </CardContent>
               </Card>
-              <motion.div
-                variants={overlayVariants}
+              <div
                 className="absolute bottom-2 right-3 text-xs text-muted-foreground pointer-events-none"
               >
                 Klik untuk melihat detail
-              </motion.div>
+              </div>
           </motion.div>
         </Link>
         <Link href="/dashboard/products">
           <motion.div
             className="relative"
-            initial="hidden"
-            whileHover="visible"
             {...cardAnimation}
           >
             <Card>
@@ -200,19 +184,16 @@ export default function DashboardPage() {
                 </p>
               </CardContent>
             </Card>
-            <motion.div
-              variants={overlayVariants}
+            <div
               className="absolute bottom-2 right-3 text-xs text-muted-foreground pointer-events-none"
             >
               Klik untuk melihat detail
-            </motion.div>
+            </div>
           </motion.div>
         </Link>
         <Link href="/dashboard/products">
           <motion.div
             className="relative"
-            initial="hidden"
-            whileHover="visible"
             {...cardAnimation}
           >
             <Card>
@@ -227,19 +208,16 @@ export default function DashboardPage() {
                 </p>
               </CardContent>
             </Card>
-            <motion.div
-              variants={overlayVariants}
+            <div
               className="absolute bottom-2 right-3 text-xs text-muted-foreground pointer-events-none"
             >
               Klik untuk melihat detail
-            </motion.div>
+            </div>
           </motion.div>
         </Link>
         <Link href="/dashboard/products">
           <motion.div
             className="relative"
-            initial="hidden"
-            whileHover="visible"
             {...cardAnimation}
           >
             <Card>
@@ -254,12 +232,11 @@ export default function DashboardPage() {
                 </p>
               </CardContent>
             </Card>
-            <motion.div
-              variants={overlayVariants}
+            <div
               className="absolute bottom-2 right-3 text-xs text-muted-foreground pointer-events-none"
             >
               Klik untuk melihat detail
-            </motion.div>
+            </div>
           </motion.div>
         </Link>
       </div>

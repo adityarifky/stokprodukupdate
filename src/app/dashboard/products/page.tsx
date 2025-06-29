@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
+import Link from "next/link";
 
 const products: any[] = []
 
@@ -33,9 +34,11 @@ export default function ProductsPage() {
                                 Kelola produk Anda dan lihat inventarisnya.
                             </CardDescription>
                         </div>
-                        <Button>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Tambah Produk
+                        <Button asChild>
+                            <Link href="/dashboard/products/add">
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Tambah Produk
+                            </Link>
                         </Button>
                     </div>
                 </CardHeader>

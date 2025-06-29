@@ -15,7 +15,7 @@ export default function LoginPage() {
     <main className="relative flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="absolute inset-0 bg-gradient-to-br from-background via-amber-50 to-background z-0" />
       <div className="relative z-10 w-full max-w-md">
-        <div className="mb-8 flex items-center justify-center gap-4">
+        <div className="mb-8 flex items-center gap-4">
           <Image
             src="/Logo Dreampuff.png"
             alt="Logo Dreampuff"
@@ -23,7 +23,7 @@ export default function LoginPage() {
             height={80}
             className="object-contain"
           />
-          <div className="text-left">
+          <div className="flex-1 text-center">
             <h1 className="font-headline text-3xl font-bold tracking-tight text-primary">
               Dreampuff Stock Update
             </h1>

@@ -1,0 +1,52 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+    // Aturan untuk pengguna
+    match /users/{userId} {
+      // Pengguna yang terautentikasi dapat membaca semua profil pengguna
+      allow read: if request.auth != null;
+      // Pengguna hanya dapat membuat atau memperbarui profil mereka sendiri
+      allow write: if request.auth.uid == userId;
+    }
+
+    // Aturan untuk aktivitas pengguna
+    match /user-activity/{activityId} {
+      // Pengguna yang terautentikasi dapat membaca semua data aktivitas
+      allow read: if request.auth != null;
+      // Aktivitas hanya dapat dibuat oleh pengguna yang terautentikasi
+      // dan userId dalam dokumen harus cocok dengan uid pengguna
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Tidak ada yang diizinkan untuk memperbarui atau menghapus log aktivitas
+      allow update, delete: if false;
+    }
+
+    // Aturan untuk obrolan/chat
+    match /chats/{chatId} {
+      // Dokumen obrolan dapat dibaca oleh partisipan
+      allow read: if request.auth.uid in resource.data.participants;
+      
+      // Dokumen obrolan dapat dibuat oleh pengguna terautentikasi yang merupakan partisipan
+      allow create: if request.auth != null && request.auth.uid in request.resource.data.participants;
+      
+      // Dokumen obrolan (misalnya lastMessageTimestamp) dapat diperbarui oleh partisipan
+      allow update: if request.auth.uid in resource.data.participants;
+
+      // Aturan untuk sub-koleksi pesan
+      match /messages/{messageId} {
+        // Pesan dapat dibaca oleh partisipan dari obrolan induk
+        allow read: if request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        
+        // Pesan dapat dibuat oleh partisipan dari obrolan induk
+        allow create: if request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants 
+                      && request.auth.uid == request.resource.data.senderId;
+      }
+    }
+
+    // Aturan default untuk semua koleksi lain yang tidak cocok
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

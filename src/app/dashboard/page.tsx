@@ -219,7 +219,7 @@ export default function DashboardPage() {
              <CardDescription>
               Ringkasan kinerja penjualan Anda minggu ini.
             </CardDescription>
-          </Header>
+          </CardHeader>
           <CardContent className="pl-2">
             <Overview />
           </CardContent>

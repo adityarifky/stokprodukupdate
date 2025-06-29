@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Package, BarChart2, User, LogOut } from "lucide-react";
+import { Home, Package, Users, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -17,7 +17,7 @@ import {
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/dashboard/products", label: "Produk", icon: Package },
-  { href: "#", label: "Laporan", icon: BarChart2 },
+  { href: "/dashboard/user-activity", label: "Aktivitas", icon: Users },
 ];
 
 export function BottomNav({
@@ -42,7 +42,7 @@ export function BottomNav({
             href={item.href}
             className={cn(
               "flex flex-col items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary",
-              pathname === item.href && "text-primary"
+              (pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))) && "text-primary"
             )}
           >
             <item.icon className="h-5 w-5" />

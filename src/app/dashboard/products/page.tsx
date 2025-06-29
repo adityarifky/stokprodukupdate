@@ -1,4 +1,6 @@
+'use client';
 
+import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -19,10 +21,43 @@ import {
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import Link from "next/link";
+import { db } from '@/lib/firebase';
+import { collection, onSnapshot, query, orderBy, DocumentData } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const products: any[] = []
+interface Product {
+    id: string;
+    name: string;
+    image: string;
+    aiHint: string;
+    stock: number;
+}
 
 export default function ProductsPage() {
+    const [products, setProducts] = useState<Product[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (!db) {
+            setIsLoading(false);
+            return;
+        }
+        const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const productsData: Product[] = [];
+            querySnapshot.forEach((doc: DocumentData) => {
+                productsData.push({ id: doc.id, ...doc.data() } as Product);
+            });
+            setProducts(productsData);
+            setIsLoading(false);
+        }, (error) => {
+            console.error("Error fetching products:", error);
+            setIsLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
     return (
         <main className="p-4 sm:px-6 md:p-8">
             <Card>
@@ -55,7 +90,18 @@ export default function ProductsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {products.length > 0 ? (
+                            {isLoading ? (
+                                [...Array(3)].map((_, i) => (
+                                    <TableRow key={i}>
+                                        <TableCell className="hidden sm:table-cell">
+                                            <Skeleton className="h-10 w-10 rounded-md" />
+                                        </TableCell>
+                                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                                        <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                                        <TableCell className="text-right"><Skeleton className="h-5 w-10 ml-auto" /></TableCell>
+                                    </TableRow>
+                                ))
+                            ) : products.length > 0 ? (
                                 products.map((product) => (
                                     <TableRow key={product.id}>
                                         <TableCell className="hidden sm:table-cell">

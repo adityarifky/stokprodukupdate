@@ -27,6 +27,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Upload } from "lucide-react";
 import Image from "next/image";
+import { db, storage } from "@/lib/firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nama produk harus memiliki setidaknya 2 karakter." }),
@@ -66,17 +69,58 @@ export function AddProductForm() {
     
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true);
-        console.log("Form values:", values);
-        
-        // Simulate network request
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        toast({
-            title: "Fitur Dalam Pengembangan",
-            description: "Penyimpanan produk ke database belum diimplementasikan.",
-        });
-        
-        setIsLoading(false);
+        if (!db || !storage) {
+            toast({
+                title: "Konfigurasi Firebase Hilang",
+                description: "Koneksi ke database atau storage gagal.",
+                variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            let imageUrl = '';
+            let aiHint = '';
+            
+            if (values.image) {
+                const file = values.image as File;
+                aiHint = file.name.split('.')[0].replace(/[-_]/g, ' ').substring(0, 50);
+                const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
+                await uploadBytes(storageRef, file);
+                imageUrl = await getDownloadURL(storageRef);
+            } else {
+                imageUrl = `https://placehold.co/400x400.png`;
+                aiHint = `${values.category.toLowerCase()} ${values.name.split(' ')[0].toLowerCase()}`;
+            }
+
+            await addDoc(collection(db, "products"), {
+                name: values.name,
+                description: values.description || '',
+                category: values.category,
+                image: imageUrl,
+                aiHint: aiHint,
+                stock: 0,
+                createdAt: serverTimestamp(),
+            });
+            
+            toast({
+                title: "Produk Berhasil Ditambahkan",
+                description: `${values.name} telah disimpan ke database.`,
+            });
+            
+            router.push('/dashboard/products');
+
+        } catch (error) {
+            console.error("Error adding product:", error);
+            toast({
+                title: "Gagal Menambahkan Produk",
+                description: "Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (

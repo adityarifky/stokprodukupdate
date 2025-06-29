@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
+import { getStorage, type Storage } from "firebase/storage";
 
 // Konfigurasi ini diambil dari variabel lingkungan untuk keamanan.
 // Pastikan Anda membuat file .env.local di root proyek Anda
@@ -17,6 +18,7 @@ const firebaseConfig = {
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
+let storage: Storage | null = null;
 
 // Inisialisasi Firebase hanya jika kunci API ada.
 // Ini mencegah error jika variabel lingkungan tidak diatur.
@@ -25,6 +27,7 @@ if (firebaseConfig.apiKey) {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
     db = getFirestore(app);
+    storage = getStorage(app);
   } catch (e) {
     console.error("Gagal menginisialisasi Firebase. Periksa konfigurasi Anda.", e);
   }
@@ -32,4 +35,4 @@ if (firebaseConfig.apiKey) {
   console.warn("Kunci API Firebase hilang. Fitur terkait Firebase akan dinonaktifkan. Harap tambahkan kredensial Anda ke file .env.local dan restart server pengembangan Anda.");
 }
 
-export { app, auth, db };
+export { app, auth, db, storage };

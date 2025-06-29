@@ -122,7 +122,7 @@ export function UserNav({
 
   return (
     <div className="flex items-center gap-4">
-      <div className="hidden md:block h-5">
+      <div className="hidden md:flex items-center">
         <AnimatePresence mode="wait">
           {story && (
             <motion.p
@@ -131,7 +131,7 @@ export function UserNav({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -5 }}
               transition={{ ease: "easeInOut", duration: 0.5 }}
-              className="text-sm text-muted-foreground font-medium"
+              className="text-sm text-muted-foreground font-medium truncate max-w-xs"
             >
               {story}
             </motion.p>

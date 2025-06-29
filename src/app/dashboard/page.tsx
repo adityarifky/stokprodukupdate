@@ -187,7 +187,7 @@ export default function DashboardPage() {
                     <CardTitle className="text-sm font-medium">{category.name}</CardTitle>
                     <category.icon className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pb-10">
                     {renderStockCount(category.name)}
                     <p className="text-xs text-muted-foreground">
                         {currentDate || '\u00A0'}
@@ -226,16 +226,16 @@ export default function DashboardPage() {
         </Card>
         <Card>
             <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex-1">
                         <CardTitle className="font-headline">Ringkasan Grafik Stok</CardTitle>
                         <CardDescription>
                           Grafik aktivitas stok masuk dan keluar untuk 7 produk teratas.
                         </CardDescription>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <div className="flex items-center flex-wrap justify-start sm:justify-end gap-2">
                         <Select value={filterType} onValueChange={handleFilterChange}>
-                            <SelectTrigger className="w-full sm:w-[120px]">
+                            <SelectTrigger className="w-auto min-w-[120px]">
                                 <SelectValue placeholder="Pilih Rentang" />
                             </SelectTrigger>
                             <SelectContent>
@@ -251,7 +251,7 @@ export default function DashboardPage() {
                                     id="date"
                                     variant={"outline"}
                                     className={cn(
-                                        "w-full sm:w-[260px] justify-start text-left font-normal",
+                                        "w-auto min-w-[260px] justify-start text-left font-normal",
                                         !dateRange && "text-muted-foreground"
                                     )}
                                 >

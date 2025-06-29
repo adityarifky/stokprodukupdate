@@ -103,6 +103,16 @@ export function AnnouncementFormDialog({ isOpen, onOpenChange, announcement }: A
                     timestamp: serverTimestamp(),
                 });
                 toast({ title: "Pengumuman Berhasil Ditambahkan" });
+
+                // Kirim notifikasi ke semua pengguna
+                fetch('/api/send-notifications', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        title: `Pengumuman Baru: ${values.title}`,
+                        content: `Cek pengumuman baru dari ${userName}.`
+                    }),
+                }).catch(err => console.error("Gagal mengirim notifikasi:", err));
             }
             handleClose();
         } catch (error) {

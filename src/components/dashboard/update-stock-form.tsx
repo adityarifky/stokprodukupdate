@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { db } from "@/lib/firebase";
-import { collection, doc, runTransaction, query, onSnapshot, DocumentData, orderBy } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
+import { collection, doc, runTransaction, query, onSnapshot, DocumentData, orderBy, addDoc, serverTimestamp } from "firebase/firestore";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronsUpDown, Check, Plus, Minus } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -105,8 +105,8 @@ export function UpdateStockForm() {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true);
 
-        if (!db) {
-            toast({ title: "Database tidak tersedia", variant: "destructive" });
+        if (!db || !auth.currentUser) {
+            toast({ title: "Database tidak tersedia atau Anda tidak login", variant: "destructive" });
             setIsLoading(false);
             return;
         }
@@ -115,28 +115,42 @@ export function UpdateStockForm() {
         const productRef = doc(db, "products", productId);
 
         try {
-            await runTransaction(db, async (transaction) => {
+            const newStock = await runTransaction(db, async (transaction) => {
                 const productDoc = await transaction.get(productRef);
                 if (!productDoc.exists()) {
                     throw new Error("Produk tidak ditemukan!");
                 }
 
                 const currentStock = productDoc.data().stock || 0;
-                let newStock = currentStock;
+                let updatedStock = currentStock;
 
                 if (operation === "add") {
-                    newStock += quantity;
+                    updatedStock += quantity;
                 } else { // subtract
                     if (currentStock < quantity) {
                         throw new Error("Stok tidak mencukupi untuk dikurangi.");
                     }
-                    newStock -= quantity;
+                    updatedStock -= quantity;
                 }
                 
-                transaction.update(productRef, { stock: newStock });
+                transaction.update(productRef, { stock: updatedStock });
+                return updatedStock;
             });
             
             const selectedProduct = products.find(p => p.id === productId);
+            const userName = localStorage.getItem('userName') || "Pengguna Tidak Dikenal";
+
+            await addDoc(collection(db, "stock_history"), {
+                productId: productId,
+                productName: selectedProduct?.name || 'N/A',
+                operation: operation,
+                quantity: quantity,
+                stockAfter: newStock,
+                userId: auth.currentUser.uid,
+                userName: userName,
+                timestamp: serverTimestamp(),
+            });
+            
             toast({
                 title: "Stok Berhasil Diperbarui",
                 description: `Stok untuk ${selectedProduct?.name} telah diubah.`,

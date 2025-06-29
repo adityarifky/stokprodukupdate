@@ -73,12 +73,7 @@ export default function DashboardLayout({
         <main className="flex-1 pb-16">
             <ProfileSetupGuard onProfileComplete={handleProfileUpdate}>{children}</ProfileSetupGuard>
         </main>
-        <BottomNav 
-          name={userName} 
-          position={userPosition} 
-          onProfileClick={() => setProfileDialogOpen(true)} 
-          onLogout={handleLogout} 
-        />
+        <BottomNav />
     </div>
   );
 }

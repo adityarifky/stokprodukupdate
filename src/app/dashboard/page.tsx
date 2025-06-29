@@ -174,43 +174,46 @@ export default function DashboardPage() {
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-      <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-6">
-        {categories.map((category) => (
-            <Link key={category.name} href={`/dashboard/products/${encodeURIComponent(category.name)}`}>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <Card className="relative overflow-hidden h-full">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">{category.name}</CardTitle>
-                    <category.icon className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent className="pb-10">
-                    {renderStockCount(category.name)}
-                    <p className="text-xs text-muted-foreground">
-                        {currentDate || '\u00A0'}
-                    </p>
-                  </CardContent>
+      <div className="w-full overflow-x-auto pb-2">
+        <div className="grid grid-flow-col auto-cols-[minmax(220px,1fr)] gap-4">
+            {categories.map((category) => (
+                <Link key={category.name} href={`/dashboard/products/${encodeURIComponent(category.name)}`}>
                   <motion.div
-                      className="absolute bottom-4 right-4 text-xs text-foreground"
-                      animate={{ opacity: [0.3, 1, 0.3] }}
-                      transition={{
-                          duration: 2.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                      }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    className="h-full"
                   >
-                      Klik untuk melihat detail
+                    <Card className="relative overflow-hidden h-full">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">{category.name}</CardTitle>
+                        <category.icon className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent className="pb-10">
+                        {renderStockCount(category.name)}
+                        <p className="text-xs text-muted-foreground">
+                            {currentDate || '\u00A0'}
+                        </p>
+                      </CardContent>
+                      <motion.div
+                          className="absolute bottom-4 right-4 text-xs text-foreground"
+                          animate={{ opacity: [0.3, 1, 0.3] }}
+                          transition={{
+                              duration: 2.5,
+                              repeat: Infinity,
+                              ease: "easeInOut",
+                          }}
+                      >
+                          Klik untuk melihat detail
+                      </motion.div>
+                    </Card>
                   </motion.div>
-                </Card>
-              </motion.div>
-            </Link>
-        ))}
+                </Link>
+            ))}
+        </div>
       </div>
-      <div className="grid grid-cols-1 gap-4 md:gap-8 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+      <div className="grid grid-cols-1 gap-4 md:gap-8">
+        <Card>
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2">
                 <Megaphone className="h-6 w-6"/>

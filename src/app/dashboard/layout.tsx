@@ -8,7 +8,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
+import { doc, updateDoc } from "firebase/firestore";
 
 export default function DashboardLayout({
   children,
@@ -32,11 +33,22 @@ export default function DashboardLayout({
   }, []);
   
   const onAvatarChange = () => {
-    setAvatarUrl(localStorage.getItem("avatarUrl") || "");
+    const newAvatarUrl = localStorage.getItem("avatarUrl") || "";
+    setAvatarUrl(newAvatarUrl);
+    if(auth.currentUser && db) {
+        const userRef = doc(db, 'users', auth.currentUser.uid);
+        updateDoc(userRef, { avatarUrl: newAvatarUrl });
+    }
   }
 
   const handleLogout = async () => {
     try {
+      if (auth.currentUser && db) {
+        const userDocRef = doc(db, "users", auth.currentUser.uid);
+        await updateDoc(userDocRef, {
+            status: 'offline'
+        });
+      }
       await signOut(auth);
       localStorage.removeItem('userName');
       localStorage.removeItem('userPosition');
@@ -73,7 +85,10 @@ export default function DashboardLayout({
         <main className="flex-1 pb-16">
             <ProfileSetupGuard onProfileComplete={handleProfileUpdate}>{children}</ProfileSetupGuard>
         </main>
-        <BottomNav />
+        <BottomNav 
+          isProfileDialogOpen={isProfileDialogOpen}
+          onProfileDialogOpenChange={setProfileDialogOpen}
+        />
     </div>
   );
 }

@@ -17,9 +17,10 @@ import {
 } from "@/components/ui/form";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { signInWithEmailAndPassword, UserCredential } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
+import { collection, addDoc, serverTimestamp, doc, updateDoc, getDoc } from "firebase/firestore";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Silakan masukkan alamat email yang valid." }),
@@ -43,7 +44,7 @@ export function LoginForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
 
-    if (!auth) {
+    if (!auth || !db) {
       toast({
         title: "Konfigurasi Firebase Hilang",
         description: "Kunci API Firebase tidak ditemukan. Periksa file .env.local Anda dan pastikan server telah di-restart.",
@@ -54,8 +55,51 @@ export function LoginForm() {
     }
 
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
+      const userCredential: UserCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+
+      const userDocRef = doc(db, "users", user.uid);
+      await updateDoc(userDocRef, {
+        status: 'online',
+        lastLogin: serverTimestamp()
+      });
+
+      const userDoc = await getDoc(userDocRef);
+      if (userDoc.exists()) {
+          const userData = userDoc.data();
+          localStorage.setItem('userName', userData.name || "");
+          localStorage.setItem('userPosition', userData.position || "");
+          localStorage.setItem('avatarUrl', userData.avatarUrl || "");
+          localStorage.setItem('profileSetupComplete', 'true');
+        
+          try {
+            const response = await fetch('https://api.ipify.org?format=json');
+            const data = await response.json();
+            const ipAddress = data.ip || 'N/A';
+
+            await addDoc(collection(db, "user-activity"), {
+                userId: user.uid,
+                name: userData.name,
+                position: userData.position,
+                loginTime: serverTimestamp(),
+                ip: ipAddress,
+                avatar: userData.avatarUrl || ''
+            });
+          } catch (ipError) {
+              console.error("Gagal mengambil IP atau mencatat aktivitas:", ipError);
+              await addDoc(collection(db, "user-activity"), {
+                userId: user.uid,
+                name: userData.name,
+                position: userData.position,
+                loginTime: serverTimestamp(),
+                ip: 'N/A',
+                avatar: userData.avatarUrl || ''
+              });
+          }
+      }
+      
       router.push("/dashboard");
+
     } catch (error: any) {
       let errorMessage = "Terjadi kesalahan saat masuk.";
       switch (error.code) {

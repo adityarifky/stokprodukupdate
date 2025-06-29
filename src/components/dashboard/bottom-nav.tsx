@@ -4,6 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Package, History, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "../ui/button";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
@@ -12,7 +21,13 @@ const navItems = [
   { href: "/dashboard/users", label: "Pengguna", icon: Users },
 ];
 
-export function BottomNav() {
+export function BottomNav({
+  isProfileDialogOpen,
+  onProfileDialogOpenChange,
+}: {
+  isProfileDialogOpen: boolean,
+  onProfileDialogOpenChange: (open: boolean) => void,
+}) {
   const pathname = usePathname();
 
   return (

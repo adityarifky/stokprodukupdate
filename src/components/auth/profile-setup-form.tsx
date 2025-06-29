@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,6 +23,9 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { User, Briefcase } from "lucide-react";
+import { auth, db } from "@/lib/firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nama harus memiliki setidaknya 2 karakter." }),
@@ -34,6 +36,7 @@ const formSchema = z.object({
 
 export function ProfileSetupForm({ onComplete }: { onComplete: () => void }) {
   const [isLoading, setIsLoading] = React.useState(false);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -42,16 +45,44 @@ export function ProfileSetupForm({ onComplete }: { onComplete: () => void }) {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    localStorage.setItem('userName', values.name);
-    localStorage.setItem('userPosition', values.position);
-    localStorage.setItem('profileSetupComplete', 'true');
-    
-    setTimeout(() => {
-        onComplete();
+
+    if (!auth?.currentUser || !db) {
+      toast({
+        title: "Gagal Menyimpan Profil",
+        description: "Pengguna tidak terautentikasi atau database tidak tersedia.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const userRef = doc(db, "users", auth.currentUser.uid);
+      await setDoc(userRef, {
+        name: values.name,
+        position: values.position,
+        avatarUrl: localStorage.getItem('avatarUrl') || '',
+        status: "online",
+        createdAt: serverTimestamp(),
+      }, { merge: true });
+
+      localStorage.setItem('userName', values.name);
+      localStorage.setItem('userPosition', values.position);
+      localStorage.setItem('profileSetupComplete', 'true');
+      
+      onComplete();
+    } catch (error) {
+      console.error("Gagal menyimpan profil:", error);
+       toast({
+        title: "Gagal Menyimpan Profil",
+        description: "Terjadi kesalahan saat menyimpan data Anda. Silakan coba lagi.",
+        variant: "destructive",
+      });
+    } finally {
         setIsLoading(false);
-    }, 500);
+    }
   }
 
   return (

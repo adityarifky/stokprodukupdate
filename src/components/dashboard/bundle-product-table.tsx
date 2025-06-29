@@ -125,7 +125,7 @@ export function BundleProductTable() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Nama Bundel</TableHead>
+                                <TableHead>Nama Bundling</TableHead>
                                 <TableHead>Harga</TableHead>
                                 <TableHead>Produk Termasuk</TableHead>
                                 <TableHead className="text-right">Aksi</TableHead>

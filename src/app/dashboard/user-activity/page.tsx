@@ -43,51 +43,26 @@ export default function UserActivityPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
 
-  // Effect 1: Check permissions on auth state change
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, async (user: User | null) => {
-      if (user && db) {
-        try {
-          const userRef = doc(db, 'users', user.uid);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists() && userSnap.data().position === 'Management') {
-            setIsAllowed(true);
-          } else {
-            setIsAllowed(false);
-          }
-        } catch (error) {
-          console.error("Error checking permissions:", error);
-          setIsAllowed(false);
-        }
-      } else {
-        // No user is signed in.
-        setIsAllowed(false);
-      }
-    });
-
-    return () => unsubscribeAuth();
-  }, []);
-
-  // Effect 2: Fetch data only when permission is granted or denied
-  useEffect(() => {
-    if (isAllowed === null) {
-      setIsLoading(true);
-      return; // Wait for permission check to complete
-    }
-
-    if (isAllowed === false) {
-      setIsLoading(false); // Permission denied, stop loading
-      setUserActivity([]);
-      return;
-    }
-
-    // isAllowed === true, so we can fetch data
     let unsubscribeActivities: Unsubscribe | undefined;
 
-    const fetchData = async () => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user: User | null) => {
+      // Bersihkan listener lama setiap kali status otentikasi berubah
+      if (unsubscribeActivities) {
+        unsubscribeActivities();
+        unsubscribeActivities = undefined;
+      }
+
+      if (user && db) {
         try {
-            // First, get all user data to map user IDs to names/avatars.
-            // This is efficient as it's fetched once.
+          // 1. Cek izin terlebih dahulu
+          const userRef = doc(db, 'users', user.uid);
+          const userSnap = await getDoc(userRef);
+          
+          if (userSnap.exists() && userSnap.data().position === 'Management') {
+            setIsAllowed(true);
+
+            // 2. Jika diizinkan, baru ambil data
             const usersQuery = query(collection(db, "users"));
             const usersSnapshot = await getDocs(usersQuery);
             const usersMap = new Map<string, UserData>();
@@ -100,9 +75,7 @@ export default function UserActivityPage() {
               });
             });
 
-            // Now, set up the real-time listener for activities
             const activityQuery = query(collection(db, "user-activity"), orderBy("loginTime", "desc"));
-            
             unsubscribeActivities = onSnapshot(activityQuery, (activitySnapshot) => {
                 const activities = activitySnapshot.docs.map(doc => {
                     const data = doc.data();
@@ -121,28 +94,35 @@ export default function UserActivityPage() {
                 setUserActivity(activities);
                 setIsLoading(false);
             }, (error) => {
-                // This will catch the permission-denied error if the rules are incorrect.
                 console.error("Snapshot listener error on user-activity:", error);
-                setIsAllowed(false); 
+                setIsAllowed(false);
                 setIsLoading(false);
             });
-
-        } catch (error) {
-            console.error("Error fetching initial user data for activity page:", error);
+            
+          } else {
+            // Pengguna bukan 'Management' atau tidak punya profil
             setIsAllowed(false);
             setIsLoading(false);
+          }
+        } catch (error) {
+          console.error("Error saat memeriksa izin:", error);
+          setIsAllowed(false);
+          setIsLoading(false);
         }
-    };
+      } else {
+        // Tidak ada pengguna yang login
+        setIsAllowed(false);
+        setIsLoading(false);
+      }
+    });
 
-    fetchData();
-
-    // Cleanup function to detach the listener when the component unmounts
     return () => {
+      unsubscribeAuth();
       if (unsubscribeActivities) {
         unsubscribeActivities();
       }
     };
-  }, [isAllowed]);
+  }, []);
 
   if (isLoading || isAllowed === null) {
     return (

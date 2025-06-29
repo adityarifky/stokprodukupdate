@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from "react";
@@ -32,11 +33,24 @@ interface Activity {
     avatar: string;
 }
 
-function ActivityTable() {
+interface ActivityTableProps {
+  isManagement: boolean;
+}
+
+function ActivityTable({ isManagement }: ActivityTableProps) {
     const [userActivity, setUserActivity] = useState<Activity[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        // Guard: Jika pengguna bukan Management, jangan pernah coba membuat query.
+        // Ini juga menangani kasus ketika prop isManagement berubah dari true menjadi false.
+        if (!isManagement) {
+            setIsLoading(false);
+            setUserActivity([]); // Kosongkan data jika ada sisa dari sesi sebelumnya
+            return;
+        }
+
+        setIsLoading(true);
         const activityQuery = query(collection(db, "user-activity"), orderBy("loginTime", "desc"));
         const unsubscribe = onSnapshot(activityQuery, (activitySnapshot) => {
             const activities = activitySnapshot.docs.map(doc => {
@@ -54,14 +68,15 @@ function ActivityTable() {
             setUserActivity(activities);
             setIsLoading(false);
         }, (error) => {
-            // This error is now less likely because the component is guarded.
-            // However, it's good practice to keep it.
+            // Error ini sekarang jauh lebih kecil kemungkinannya terjadi.
             console.error("Snapshot listener error on user-activity:", error);
             setIsLoading(false);
         });
         
+        // Cleanup function ini sekarang terikat dengan prop isManagement.
+        // Jika prop berubah, listener lama akan dibersihkan sebelum effect baru dijalankan.
         return () => unsubscribe();
-    }, []);
+    }, [isManagement]); // <-- Dependensi krusial ditambahkan
 
     if (isLoading) {
         return (
@@ -185,7 +200,7 @@ export default function UserActivityPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-            <ActivityTable />
+            <ActivityTable isManagement={isManagement} />
         </CardContent>
       </Card>
     </main>

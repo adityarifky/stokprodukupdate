@@ -25,11 +25,11 @@ export default function LoginPage() {
               className="object-contain"
             />
             <h1 className="font-headline text-4xl font-bold tracking-tight text-primary">
-              Dreampuff
+              Dreampuff Stock Update
             </h1>
           </div>
           <p className="max-w-xs text-muted-foreground">
-            Selamat datang kembali! Masuk untuk mengelola inventaris makanan penutup Anda dengan mudah dan presisi.
+            What’s Hot Today?
           </p>
         </div>
         <LoginForm />

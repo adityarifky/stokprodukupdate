@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Package, User } from "lucide-react";
+import { Home, Package, History, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/dashboard/products", label: "Produk", icon: Package },
+  { href: "/dashboard/user-activity", label: "Aktivitas", icon: History },
+  { href: "/dashboard/users", label: "Pengguna", icon: Users },
 ];
 
 export function BottomNav() {
@@ -29,16 +31,6 @@ export function BottomNav() {
             <span className="truncate">{item.label}</span>
           </Link>
         ))}
-        <Link
-          href="/dashboard/user-activity"
-          className={cn(
-            "flex flex-col items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary",
-            pathname.startsWith("/dashboard/user-activity") && "text-primary"
-          )}
-        >
-          <User className="h-5 w-5" />
-          <span className="truncate">Pengguna</span>
-        </Link>
       </nav>
     </footer>
   );

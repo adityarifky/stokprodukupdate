@@ -10,7 +10,7 @@ import {
 import { Overview } from "@/components/dashboard/overview";
 import { LatestAnnouncements } from "@/components/dashboard/latest-announcements";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query, DocumentData, where } from "firebase/firestore";
+import { collection, onSnapshot, query, DocumentData } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Utensils, Cake, Layers, CupSoda, Package, ShoppingBasket, Megaphone } from "lucide-react";
@@ -32,6 +32,7 @@ interface StockData {
 
 interface StockChartData {
   name: string;
+  added: number;
   subtracted: number;
 }
 
@@ -86,24 +87,28 @@ export default function DashboardPage() {
             return;
         }
 
-        const q = query(
-            collection(db, "stock_history"),
-            where("operation", "==", "subtract")
-        );
+        const q = query(collection(db, "stock_history"));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const subtractedData: { [productName: string]: number } = {};
+            const aggregatedData: { [productName: string]: { added: number; subtracted: number } } = {};
 
             snapshot.forEach(doc => {
                 const activity = doc.data();
                 if (activity.productName) {
-                    subtractedData[activity.productName] = (subtractedData[activity.productName] || 0) + (activity.quantity || 0);
+                    if (!aggregatedData[activity.productName]) {
+                        aggregatedData[activity.productName] = { added: 0, subtracted: 0 };
+                    }
+                    if (activity.operation === 'add') {
+                        aggregatedData[activity.productName].added += activity.quantity || 0;
+                    } else if (activity.operation === 'subtract') {
+                        aggregatedData[activity.productName].subtracted += activity.quantity || 0;
+                    }
                 }
             });
 
-            const formattedChartData = Object.entries(subtractedData)
-                .map(([name, subtracted]) => ({ name, subtracted }))
-                .sort((a, b) => b.subtracted - a.subtracted)
+            const formattedChartData = Object.entries(aggregatedData)
+                .map(([name, { added, subtracted }]) => ({ name, added, subtracted }))
+                .sort((a, b) => (b.subtracted + b.added) - (a.subtracted + a.added))
                 .slice(0, 7);
 
             setStockChartData(formattedChartData);
@@ -180,7 +185,7 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle className="font-headline">Ringkasan Grafik Stok</CardTitle>
              <CardDescription>
-              Grafik 7 produk teratas yang stoknya paling sering berkurang.
+              Grafik aktivitas stok masuk dan keluar untuk 7 produk teratas.
             </CardDescription>
           </CardHeader>
           <CardContent className="pl-2">

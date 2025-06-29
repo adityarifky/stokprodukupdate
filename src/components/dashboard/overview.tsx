@@ -13,6 +13,10 @@ import {
 } from "@/components/ui/chart"
 
 const chartConfig = {
+  added: {
+    label: "Stok Masuk",
+    color: "hsl(var(--chart-2))",
+  },
   subtracted: {
     label: "Stok Keluar",
     color: "hsl(var(--chart-1))",
@@ -23,7 +27,7 @@ export function Overview({ data }: { data: any[] }) {
   if (!data || data.length === 0) {
     return (
         <div className="flex h-[240px] w-full items-center justify-center text-center text-sm text-muted-foreground">
-            Tidak ada data pengurangan stok untuk ditampilkan.
+            Tidak ada data aktivitas stok untuk ditampilkan.
         </div>
     )
   }
@@ -47,10 +51,11 @@ export function Overview({ data }: { data: any[] }) {
         />
         <ChartTooltip
           cursor={false}
-          content={<ChartTooltipContent />}
+          content={<ChartTooltipContent indicator="dot" />}
         />
-        <Legend content={<ChartLegendContent />} />
-        <Bar dataKey="subtracted" fill="var(--color-subtracted)" radius={8} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar dataKey="added" fill="var(--color-added)" radius={4} />
+        <Bar dataKey="subtracted" fill="var(--color-subtracted)" radius={4} />
       </BarChart>
     </ChartContainer>
   )

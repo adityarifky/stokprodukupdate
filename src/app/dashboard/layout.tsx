@@ -1,6 +1,7 @@
-import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { UserNav } from "@/components/dashboard/user-nav";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { BottomNav } from "@/components/dashboard/bottom-nav";
+import { CakeSlice } from "lucide-react";
+import Link from "next/link";
 
 export default function DashboardLayout({
   children,
@@ -8,17 +9,20 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider>
-      <DashboardSidebar />
-      <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">
-          <SidebarTrigger className="md:hidden"/>
-          <div className="ml-auto">
-            <UserNav />
+    <div className="flex min-h-screen w-full flex-col">
+      <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background px-6">
+        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <CakeSlice className="h-5 w-5" />
           </div>
-        </header>
-        {children}
-      </SidebarInset>
-    </SidebarProvider>
+          <span className="font-headline text-lg font-semibold tracking-tight">Dreampuff</span>
+        </Link>
+        <div className="ml-auto">
+          <UserNav />
+        </div>
+      </header>
+      <main className="flex flex-1 flex-col">{children}</main>
+      <BottomNav />
+    </div>
   );
 }

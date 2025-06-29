@@ -43,7 +43,6 @@ const greetings = [
 export function UserNav() {
   const [name, setName] = React.useState("");
   const [position, setPosition] = React.useState("");
-  const [tempName, setTempName] = React.useState(name);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [greeting, setGreeting] = React.useState("");
   const [isGreetingVisible, setIsGreetingVisible] = React.useState(true);
@@ -88,8 +87,6 @@ export function UserNav() {
 
   const handleProfileSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    localStorage.setItem('userName', tempName);
-    setName(tempName);
     setAvatarUrl(tempAvatarUrl);
     selectRandomGreeting();
     setIsDialogOpen(false);
@@ -114,10 +111,9 @@ export function UserNav() {
 
   React.useEffect(() => {
     if (isDialogOpen) {
-      setTempName(name);
       setTempAvatarUrl(avatarUrl);
     }
-  }, [isDialogOpen, name, avatarUrl]);
+  }, [isDialogOpen, avatarUrl]);
   
   const onCropComplete = React.useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
@@ -249,17 +245,6 @@ export function UserNav() {
                   onChange={handleFileChange}
                   className="hidden"
                   accept="image/*"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Nama
-                </Label>
-                <Input
-                  id="name"
-                  value={tempName}
-                  onChange={(e) => setTempName(e.target.value)}
-                  className="col-span-3"
                 />
               </div>
             </div>

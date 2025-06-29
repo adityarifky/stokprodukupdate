@@ -69,8 +69,9 @@ export function AddProductForm() {
     
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true);
-
-        if (!auth?.currentUser) {
+        
+        const user = auth?.currentUser;
+        if (!user) {
             toast({
                 title: "Otentikasi Gagal",
                 description: "Sesi Anda tidak valid. Silakan coba masuk lagi.",
@@ -114,6 +115,7 @@ export function AddProductForm() {
                 aiHint: aiHint,
                 stock: 0,
                 createdAt: serverTimestamp(),
+                createdBy: user.uid,
             });
             
             toast({
@@ -123,11 +125,11 @@ export function AddProductForm() {
             
             router.push('/dashboard/products');
 
-        } catch (error) {
-            console.error("Error adding product:", error);
+        } catch (error: any) {
+            console.error("Gagal menambahkan produk:", error);
             toast({
                 title: "Gagal Menambahkan Produk",
-                description: "Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.",
+                description: error.message || "Terjadi kesalahan saat menyimpan produk. Silakan coba lagi.",
                 variant: "destructive",
             });
         } finally {

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { auth, db } from "@/lib/firebase";
-import { collection, getDocs, query, orderBy, Timestamp, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, Timestamp, doc, getDoc, onSnapshot, Unsubscribe } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShieldAlert } from "lucide-react";
 import { onAuthStateChanged, type User } from "firebase/auth";
@@ -43,17 +43,51 @@ export default function UserActivityPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
 
+  // Effect 1: Check permissions on auth state change
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user: User | null) => {
       if (user && db) {
         try {
           const userRef = doc(db, 'users', user.uid);
           const userSnap = await getDoc(userRef);
-
           if (userSnap.exists() && userSnap.data().position === 'Management') {
             setIsAllowed(true);
+          } else {
+            setIsAllowed(false);
+          }
+        } catch (error) {
+          console.error("Error checking permissions:", error);
+          setIsAllowed(false);
+        }
+      } else {
+        // No user is signed in.
+        setIsAllowed(false);
+      }
+    });
 
-            // Fetch data only if allowed
+    return () => unsubscribeAuth();
+  }, []);
+
+  // Effect 2: Fetch data only when permission is granted or denied
+  useEffect(() => {
+    if (isAllowed === null) {
+      setIsLoading(true);
+      return; // Wait for permission check to complete
+    }
+
+    if (isAllowed === false) {
+      setIsLoading(false); // Permission denied, stop loading
+      setUserActivity([]);
+      return;
+    }
+
+    // isAllowed === true, so we can fetch data
+    let unsubscribeActivities: Unsubscribe | undefined;
+
+    const fetchData = async () => {
+        try {
+            // First, get all user data to map user IDs to names/avatars.
+            // This is efficient as it's fetched once.
             const usersQuery = query(collection(db, "users"));
             const usersSnapshot = await getDocs(usersQuery);
             const usersMap = new Map<string, UserData>();
@@ -66,44 +100,51 @@ export default function UserActivityPage() {
               });
             });
 
+            // Now, set up the real-time listener for activities
             const activityQuery = query(collection(db, "user-activity"), orderBy("loginTime", "desc"));
-            const activitySnapshot = await getDocs(activityQuery);
+            
+            unsubscribeActivities = onSnapshot(activityQuery, (activitySnapshot) => {
+                const activities = activitySnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const loginTime = data.loginTime as Timestamp;
+                    const userDetails = usersMap.get(data.userId) || { name: data.name || 'Pengguna Tidak Dikenal', position: data.position || 'N/A', avatar: data.avatar || '' };
 
-            const activities = activitySnapshot.docs.map(doc => {
-              const data = doc.data();
-              const loginTime = data.loginTime as Timestamp;
-              const userDetails = usersMap.get(data.userId) || { name: data.name || 'Pengguna Tidak Dikenal', position: data.position || 'N/A', avatar: data.avatar || '' };
-
-              return {
-                id: doc.id,
-                name: userDetails.name,
-                position: userDetails.position,
-                loginTime: loginTime ? new Date(loginTime.seconds * 1000).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' }) : 'N/A',
-                ip: data.ip || 'N/A',
-                avatar: userDetails.avatar,
-              };
+                    return {
+                        id: doc.id,
+                        name: userDetails.name,
+                        position: userDetails.position,
+                        loginTime: loginTime ? new Date(loginTime.seconds * 1000).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' }) : 'N/A',
+                        ip: data.ip || 'N/A',
+                        avatar: userDetails.avatar,
+                    };
+                });
+                setUserActivity(activities);
+                setIsLoading(false);
+            }, (error) => {
+                // This will catch the permission-denied error if the rules are incorrect.
+                console.error("Snapshot listener error on user-activity:", error);
+                setIsAllowed(false); 
+                setIsLoading(false);
             });
-            setUserActivity(activities);
-          } else {
-            setIsAllowed(false);
-          }
+
         } catch (error) {
-          console.error("Error checking permissions or fetching activity:", error);
-          setIsAllowed(false);
-        } finally {
-          setIsLoading(false);
+            console.error("Error fetching initial user data for activity page:", error);
+            setIsAllowed(false);
+            setIsLoading(false);
         }
-      } else {
-        // No user is signed in.
-        setIsAllowed(false);
-        setIsLoading(false);
+    };
+
+    fetchData();
+
+    // Cleanup function to detach the listener when the component unmounts
+    return () => {
+      if (unsubscribeActivities) {
+        unsubscribeActivities();
       }
-    });
+    };
+  }, [isAllowed]);
 
-    return () => unsubscribe();
-  }, []);
-
-  if (isLoading) {
+  if (isLoading || isAllowed === null) {
     return (
       <main className="p-4 sm:px-6 md:p-8">
         <Card>

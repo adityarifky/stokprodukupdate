@@ -147,9 +147,6 @@ export function LoginForm() {
             <Button type="submit" className="w-full" disabled={isLoading} suppressHydrationWarning>
               {isLoading ? "Masuk..." : "Masuk"}
             </Button>
-            <Button variant="link" size="sm" className="w-full font-normal text-sm text-primary/90" suppressHydrationWarning>
-              Lupa kata sandi Anda?
-            </Button>
           </CardFooter>
         </form>
       </Form>

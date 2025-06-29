@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from "react";
@@ -44,85 +45,87 @@ export default function UserActivityPage() {
   const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
 
   useEffect(() => {
-    let unsubscribeActivities: Unsubscribe | undefined;
-
     const unsubscribeAuth = onAuthStateChanged(auth, async (user: User | null) => {
-      // Bersihkan listener lama setiap kali status otentikasi berubah
-      if (unsubscribeActivities) {
-        unsubscribeActivities();
-        unsubscribeActivities = undefined;
-      }
-
       if (user && db) {
         try {
-          // 1. Cek izin terlebih dahulu
           const userRef = doc(db, 'users', user.uid);
           const userSnap = await getDoc(userRef);
-          
           if (userSnap.exists() && userSnap.data().position === 'Management') {
             setIsAllowed(true);
-
-            // 2. Jika diizinkan, baru ambil data
-            const usersQuery = query(collection(db, "users"));
-            const usersSnapshot = await getDocs(usersQuery);
-            const usersMap = new Map<string, UserData>();
-            usersSnapshot.forEach(doc => {
-              const data = doc.data();
-              usersMap.set(doc.id, {
-                name: data.name || 'N/A',
-                position: data.position || 'N/A',
-                avatar: data.avatarUrl || '',
-              });
-            });
-
-            const activityQuery = query(collection(db, "user-activity"), orderBy("loginTime", "desc"));
-            unsubscribeActivities = onSnapshot(activityQuery, (activitySnapshot) => {
-                const activities = activitySnapshot.docs.map(doc => {
-                    const data = doc.data();
-                    const loginTime = data.loginTime as Timestamp;
-                    const userDetails = usersMap.get(data.userId) || { name: data.name || 'Pengguna Tidak Dikenal', position: data.position || 'N/A', avatar: data.avatar || '' };
-
-                    return {
-                        id: doc.id,
-                        name: userDetails.name,
-                        position: userDetails.position,
-                        loginTime: loginTime ? new Date(loginTime.seconds * 1000).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' }) : 'N/A',
-                        ip: data.ip || 'N/A',
-                        avatar: userDetails.avatar,
-                    };
-                });
-                setUserActivity(activities);
-                setIsLoading(false);
-            }, (error) => {
-                console.error("Snapshot listener error on user-activity:", error);
-                setIsAllowed(false);
-                setIsLoading(false);
-            });
-            
           } else {
-            // Pengguna bukan 'Management' atau tidak punya profil
             setIsAllowed(false);
-            setIsLoading(false);
           }
         } catch (error) {
-          console.error("Error saat memeriksa izin:", error);
+          console.error("Error checking user permissions:", error);
           setIsAllowed(false);
-          setIsLoading(false);
         }
       } else {
-        // Tidak ada pengguna yang login
         setIsAllowed(false);
-        setIsLoading(false);
       }
     });
 
+    return () => unsubscribeAuth();
+  }, []);
+
+  useEffect(() => {
+    let unsubscribeActivities: Unsubscribe | undefined;
+    
+    // Only fetch data if user is allowed
+    if (isAllowed === true) {
+      const fetchActivities = async () => {
+        if (!db) return;
+        
+        // First, get all user data to map userId to user details
+        const usersQuery = query(collection(db, "users"));
+        const usersSnapshot = await getDocs(usersQuery);
+        const usersMap = new Map<string, UserData>();
+        usersSnapshot.forEach(doc => {
+            const data = doc.data();
+            usersMap.set(doc.id, {
+            name: data.name || 'N/A',
+            position: data.position || 'N/A',
+            avatar: data.avatarUrl || '',
+            });
+        });
+
+        // Now, set up the listener for activities
+        const activityQuery = query(collection(db, "user-activity"), orderBy("loginTime", "desc"));
+        unsubscribeActivities = onSnapshot(activityQuery, (activitySnapshot) => {
+            const activities = activitySnapshot.docs.map(doc => {
+                const data = doc.data();
+                const loginTime = data.loginTime as Timestamp;
+                const userDetails = usersMap.get(data.userId) || { name: data.name || 'Pengguna Tidak Dikenal', position: data.position || 'N/A', avatar: data.avatar || '' };
+
+                return {
+                    id: doc.id,
+                    name: userDetails.name,
+                    position: userDetails.position,
+                    loginTime: loginTime ? new Date(loginTime.seconds * 1000).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' }) : 'N/A',
+                    ip: data.ip || 'N/A',
+                    avatar: userDetails.avatar,
+                };
+            });
+            setUserActivity(activities);
+            setIsLoading(false);
+        }, (error) => {
+            console.error("Snapshot listener error on user-activity:", error);
+            setIsLoading(false);
+        });
+      };
+      
+      fetchActivities();
+
+    } else if (isAllowed === false) {
+      // If not allowed, stop loading and show the appropriate message
+      setIsLoading(false);
+    }
+
     return () => {
-      unsubscribeAuth();
       if (unsubscribeActivities) {
         unsubscribeActivities();
       }
     };
-  }, []);
+  }, [isAllowed]);
 
   if (isLoading || isAllowed === null) {
     return (

@@ -91,7 +91,12 @@ export default function UserActivityPage() {
                 <>
                   {[...Array(5)].map((_, i) => (
                     <TableRow key={i}>
-                      <TableCell><Skeleton className="h-9 w-32" /></TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-9 w-9 rounded-full" />
+                          <Skeleton className="h-5 w-24" />
+                        </div>
+                      </TableCell>
                       <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-20" /></TableCell>
                       <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-40" /></TableCell>
                       <TableCell className="text-right"><Skeleton className="h-5 w-24 ml-auto" /></TableCell>

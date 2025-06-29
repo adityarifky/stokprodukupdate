@@ -35,10 +35,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const router = useRouter();
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-            if (firebaseUser) {
-                setUser(firebaseUser);
-                const userDocRef = doc(db, 'users', firebaseUser.uid);
+        const unsubscribe = onAuthStateChanged(auth, (newUser) => {
+            if (newUser) {
+                // User is signed in. Go into a loading state until the new user's profile is fetched.
+                setLoading(true);
+                setUser(newUser);
+                const userDocRef = doc(db, 'users', newUser.uid);
+
+                // Set up a new snapshot listener for the new user.
                 const unsubscribeSnapshot = onSnapshot(userDocRef, (docSnap) => {
                     if (docSnap.exists()) {
                         const data = docSnap.data();
@@ -61,14 +65,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         setUserProfile(null);
                         localStorage.setItem('profileSetupComplete', 'false');
                     }
+                    // Stop loading AFTER profile is fetched/checked
                     setLoading(false);
                 }, (error) => {
-                    console.error("Error on user profile snapshot:", error);
-                    setLoading(false); // Stop loading even on error
+                    console.error("Auth context snapshot error:", error);
+                    setUserProfile(null);
+                    setLoading(false);
                 });
+
+                // Return the cleanup function for the snapshot listener
                 return () => unsubscribeSnapshot();
             } else {
-                // No user logged in
+                // User is signed out.
                 setUser(null);
                 setUserProfile(null);
                 setLoading(false);
@@ -77,6 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
         });
 
+        // Return the cleanup function for the auth state listener
         return () => unsubscribe();
     }, [router]);
 

@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                             avatarUrl: data.avatarUrl || '',
                         };
                         setUserProfile(profile);
-                         // This ensures localStorage is in sync for components that might still need it transitionally
+                         // This is now the SINGLE SOURCE OF TRUTH for localStorage
                         localStorage.setItem('userName', profile.name);
                         localStorage.setItem('userPosition', profile.position);
                         localStorage.setItem('avatarUrl', profile.avatarUrl);
@@ -63,6 +63,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     } else {
                         // User exists in auth, but not in firestore (first time setup)
                         setUserProfile(null);
+                        // Clean up any potential stale data and flag that setup is needed
+                        localStorage.removeItem('userName');
+                        localStorage.removeItem('userPosition');
+                        localStorage.removeItem('avatarUrl');
+                        localStorage.removeItem('userStory');
                         localStorage.setItem('profileSetupComplete', 'false');
                     }
                     // Stop loading AFTER profile is fetched/checked
@@ -80,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setUser(null);
                 setUserProfile(null);
                 setLoading(false);
-                localStorage.clear();
+                localStorage.clear(); // Clear all data on logout
                 router.replace('/');
             }
         });

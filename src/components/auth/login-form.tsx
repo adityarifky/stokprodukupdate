@@ -77,12 +77,6 @@ export function LoginForm() {
           lastLogin: serverTimestamp()
         });
 
-        localStorage.setItem('userName', userData.name || "");
-        localStorage.setItem('userPosition', userData.position || "");
-        localStorage.setItem('avatarUrl', userData.avatarUrl || "");
-        localStorage.setItem('userStory', userData.story || "");
-        localStorage.setItem('profileSetupComplete', 'true');
-      
         await addDoc(collection(db, "user-activity"), {
             userId: user.uid,
             name: userData.name,
@@ -93,13 +87,9 @@ export function LoginForm() {
         });
 
       } else {
-        localStorage.removeItem('userName');
-        localStorage.removeItem('userPosition');
-        localStorage.removeItem('avatarUrl');
-        localStorage.removeItem('userStory');
-        localStorage.setItem('profileSetupComplete', 'false');
-
-        // Store login info for activity logging after profile setup
+        // The user document doesn't exist yet (first-time login after signup).
+        // The ProfileSetupForm will handle creating the user doc and the activity log.
+        // We store the IP in sessionStorage temporarily for the setup form to use.
         sessionStorage.setItem('pendingActivityLog', JSON.stringify({ ip: ipAddress }));
       }
       

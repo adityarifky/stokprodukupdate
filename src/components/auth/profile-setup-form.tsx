@@ -60,21 +60,18 @@ export function ProfileSetupForm({ onComplete }: { onComplete: () => void }) {
 
     try {
       const userRef = doc(db, "users", auth.currentUser.uid);
+      // Create a new profile with empty avatar and story.
       await setDoc(userRef, {
         name: values.name,
         position: values.position,
         story: "",
-        avatarUrl: localStorage.getItem('avatarUrl') || '',
+        avatarUrl: "",
         status: "online",
         createdAt: serverTimestamp(),
         lastLogin: serverTimestamp(),
       }, { merge: true });
 
-      localStorage.setItem('userName', values.name);
-      localStorage.setItem('userPosition', values.position);
-      localStorage.setItem('userStory', '');
-      localStorage.setItem('profileSetupComplete', 'true');
-      
+      // Log the user activity after profile is successfully created
       const pendingActivity = sessionStorage.getItem('pendingActivityLog');
       if (pendingActivity) {
         const { ip } = JSON.parse(pendingActivity);
@@ -84,11 +81,13 @@ export function ProfileSetupForm({ onComplete }: { onComplete: () => void }) {
           position: values.position,
           loginTime: serverTimestamp(),
           ip: ip,
-          avatar: localStorage.getItem('avatarUrl') || ''
+          avatar: '' // New user has no avatar yet
         });
         sessionStorage.removeItem('pendingActivityLog');
       }
 
+      // onComplete will trigger a re-render, and useAuth will handle updating the app state
+      // and localStorage with the new profile data.
       onComplete();
     } catch (error) {
       console.error("Gagal menyimpan profil:", error);

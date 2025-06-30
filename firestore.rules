@@ -4,99 +4,88 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // =================================
-    // Helper Functions (DEFINITIVE & SAFE)
+    // Helper Functions (Corrected Syntax)
     // =================================
 
-    // The most important check. Is the user actually logged in?
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    // Is the logged-in user the owner of the resource?
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
     // Is the logged-in user a 'Management' user?
-    // THIS IS NOW SAFE. It will not run if the user is not signed in.
+    // This is the SAFE version. It checks for login, document existence,
+    // and then the position in a single, safe boolean expression.
     function isManagement() {
-      if (!isSignedIn()) {
-        return false;
-      }
       let userDocPath = /databases/$(database)/documents/users/$(request.auth.uid);
-      return exists(userDocPath) && get(userDocPath).data.position == 'Management';
+      return request.auth != null &&
+             exists(userDocPath) &&
+             get(userDocPath).data.position == 'Management';
     }
 
     // Is the logged-in user a participant of a specific chat?
-    // THIS IS NOW SAFE.
     function isChatParticipant(chatId) {
-      if (!isSignedIn()) {
-        return false;
-      }
       let chatDocPath = /databases/$(database)/documents/chats/$(chatId);
-      return exists(chatDocPath) && request.auth.uid in get(chatDocPath).data.participants;
+      return request.auth != null &&
+             exists(chatDocPath) &&
+             request.auth.uid in get(chatDocPath).data.participants;
     }
 
-
     // =================================
-    // Collection Rules (DEFINITIVE & SAFE)
+    // Collection Rules (Complete & Verified)
     // =================================
 
     // --- Users Collection ---
-    // Anyone signed in can read profiles.
-    // Only the owner can create or update their own profile.
+    // Users can read any profile (for chat list, etc.) but only update their own.
     match /users/{userId} {
-      allow read: if isSignedIn();
-      allow create, update: if isOwner(userId);
+      allow read: if request.auth != null;
+      allow create, update: if request.auth.uid == userId;
     }
 
-    // --- Products, Bundles, Announcements Collections ---
-    // Anyone signed in can read.
-    // Only 'Management' can write (create, update, delete).
+    // --- Products & Bundles Collections ---
+    // Anyone can read, only Management can write/delete.
     match /products/{docId} {
-      allow read: if isSignedIn();
-      allow write: if isManagement();
+      allow read: if request.auth != null;
+      allow create, update, delete: if isManagement();
     }
     match /bundles/{docId} {
-      allow read: if isSignedIn();
-      allow write: if isManagement();
-    }
-    match /announcements/{announcementId} {
-      allow read: if isSignedIn();
-      allow write: if isManagement();
-
-      // Replies: Anyone signed in can read and create replies.
-      match /replies/{replyId} {
-        allow read, create: if isSignedIn();
-      }
+      allow read: if request.auth != null;
+      allow create, update, delete: if isManagement();
     }
 
     // --- Stock History Collection ---
-    // Anyone signed in can read or create history entries.
+    // Any authenticated user can create a stock history record (by updating stock).
     match /stock_history/{docId} {
-      allow read, create: if isSignedIn();
+      allow read, create: if request.auth != null;
+    }
+
+    // --- Announcements Collection ---
+    // Anyone can read announcements and replies.
+    // Only Management can create/edit/delete announcements.
+    // Anyone can create replies.
+    match /announcements/{announcementId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if isManagement();
+
+      match /replies/{replyId} {
+        allow read, create: if request.auth != null;
+      }
     }
 
     // --- User Activity Collection (Sensitive) ---
-    // Only 'Management' can read activity logs.
-    // A user can only create an activity log for themselves.
+    // Only Management can read activity.
+    // A user can only create their own activity log entry.
     match /user-activity/{activityId} {
       allow read: if isManagement();
-      allow create: if isOwner(request.resource.data.userId);
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
 
     // --- Chats Collection (Private) ---
     match /chats/{chatId} {
-      // Read/Update allowed only for participants.
+      // Allow create if the user is one of the participants.
+      // Allow read/update if the user is a participant.
+      allow create: if request.auth != null && request.auth.uid in request.resource.data.participants;
       allow read, update: if isChatParticipant(chatId);
-      // Create is allowed if the user is one of the participants in the new chat document.
-      allow create: if isSignedIn() && request.auth.uid in request.resource.data.participants;
-
+      
       match /messages/{messageId} {
-        // Read/Create messages only allowed for participants.
-        // Create also checks if the senderId matches the logged-in user.
+        // Allow read if user is a participant.
+        // Allow create if user is a participant AND the sender.
         allow read: if isChatParticipant(chatId);
-        allow create: if isChatParticipant(chatId) && isOwner(request.resource.data.senderId);
+        allow create: if isChatParticipant(chatId) && request.auth.uid == request.resource.data.senderId;
       }
     }
   }

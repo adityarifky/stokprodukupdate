@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,10 +16,9 @@ import {
 } from "@/components/ui/form";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { signInWithEmailAndPassword, UserCredential } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
-import { collection, addDoc, serverTimestamp, doc, updateDoc, getDoc } from "firebase/firestore";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Silakan masukkan alamat email yang valid." }),
@@ -28,7 +26,6 @@ const formSchema = z.object({
 });
 
 export function LoginForm() {
-  const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -44,10 +41,10 @@ export function LoginForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
 
-    if (!auth || !db) {
+    if (!auth) {
       toast({
         title: "Konfigurasi Firebase Hilang",
-        description: "Kunci API Firebase tidak ditemukan. Periksa file .env.local Anda dan pastikan server telah di-restart.",
+        description: "Koneksi ke Firebase gagal.",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -55,46 +52,10 @@ export function LoginForm() {
     }
 
     try {
-      const userCredential: UserCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
-      const user = userCredential.user;
-
-      let ipAddress = 'N/A';
-      try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        ipAddress = data.ip || 'N/A';
-      } catch (ipError) {
-        console.error("Gagal mengambil IP:", ipError);
-      }
-
-      const userDocRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        await updateDoc(userDocRef, {
-          status: 'online',
-          lastLogin: serverTimestamp()
-        });
-
-        await addDoc(collection(db, "user-activity"), {
-            userId: user.uid,
-            name: userData.name,
-            position: userData.position,
-            loginTime: serverTimestamp(),
-            ip: ipAddress,
-            avatar: userData.avatarUrl || ''
-        });
-
-      } else {
-        // The user document doesn't exist yet (first-time login after signup).
-        // The ProfileSetupForm will handle creating the user doc and the activity log.
-        // We store the IP in sessionStorage temporarily for the setup form to use.
-        sessionStorage.setItem('pendingActivityLog', JSON.stringify({ ip: ipAddress }));
-      }
-      
-      router.push("/dashboard");
-
+      // Logic for login is simplified. We just sign in.
+      // The useAuth hook will handle redirection and profile fetching via onAuthStateChanged.
+      await signInWithEmailAndPassword(auth, values.email, values.password);
+      // No router.push or toast on success here. It's handled globally.
     } catch (error: any) {
       let errorMessage = "Terjadi kesalahan saat masuk.";
       switch (error.code) {
@@ -106,8 +67,8 @@ export function LoginForm() {
         case 'auth/invalid-email':
           errorMessage = "Format email tidak valid.";
           break;
-        case 'auth/invalid-api-key':
-          errorMessage = "Kunci API Firebase tidak valid. Mohon periksa konfigurasi Anda.";
+        case 'auth/too-many-requests':
+          errorMessage = "Terlalu banyak percobaan gagal. Silakan coba lagi nanti.";
           break;
         default:
           errorMessage = "Terjadi kesalahan yang tidak terduga. Silakan coba lagi nanti.";

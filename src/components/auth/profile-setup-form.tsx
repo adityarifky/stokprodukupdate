@@ -34,7 +34,19 @@ const formSchema = z.object({
   }),
 });
 
-export function ProfileSetupForm({ onComplete }: { onComplete: () => void }) {
+// Helper function to get IP
+const getIpAddress = async (): Promise<string> => {
+    try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        return data.ip || 'N/A';
+    } catch (ipError) {
+        console.error("Gagal mengambil IP:", ipError);
+        return 'N/A';
+    }
+}
+
+export function ProfileSetupForm() {
   const [isLoading, setIsLoading] = React.useState(false);
   const { toast } = useToast();
 
@@ -48,7 +60,8 @@ export function ProfileSetupForm({ onComplete }: { onComplete: () => void }) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
 
-    if (!auth?.currentUser || !db) {
+    const currentUser = auth?.currentUser;
+    if (!currentUser || !db) {
       toast({
         title: "Gagal Menyimpan Profil",
         description: "Pengguna tidak terautentikasi atau database tidak tersedia.",
@@ -59,8 +72,9 @@ export function ProfileSetupForm({ onComplete }: { onComplete: () => void }) {
     }
 
     try {
-      const userRef = doc(db, "users", auth.currentUser.uid);
-      // Create a new profile with empty avatar and story.
+      const userRef = doc(db, "users", currentUser.uid);
+      
+      // Create a clean, new profile.
       await setDoc(userRef, {
         name: values.name,
         position: values.position,
@@ -69,26 +83,23 @@ export function ProfileSetupForm({ onComplete }: { onComplete: () => void }) {
         status: "online",
         createdAt: serverTimestamp(),
         lastLogin: serverTimestamp(),
-      }, { merge: true });
+      });
 
-      // Log the user activity after profile is successfully created
-      const pendingActivity = sessionStorage.getItem('pendingActivityLog');
-      if (pendingActivity) {
-        const { ip } = JSON.parse(pendingActivity);
-        await addDoc(collection(db, "user-activity"), {
-          userId: auth.currentUser.uid,
-          name: values.name,
-          position: values.position,
-          loginTime: serverTimestamp(),
-          ip: ip,
-          avatar: '' // New user has no avatar yet
-        });
-        sessionStorage.removeItem('pendingActivityLog');
-      }
+      // Log the very first user activity after the profile is created
+      const ipAddress = await getIpAddress();
+      await addDoc(collection(db, "user-activity"), {
+        userId: currentUser.uid,
+        name: values.name,
+        position: values.position,
+        loginTime: serverTimestamp(),
+        ip: ipAddress,
+        avatar: '' // New user has no avatar yet
+      });
 
-      // onComplete will trigger a re-render, and useAuth will handle updating the app state
-      // and localStorage with the new profile data.
-      onComplete();
+      // After this, the onSnapshot listener in useAuth will automatically
+      // pick up the new profile and update the UI. No need for callbacks.
+      // The dialog will close automatically as the layout re-renders.
+
     } catch (error) {
       console.error("Gagal menyimpan profil:", error);
        toast({

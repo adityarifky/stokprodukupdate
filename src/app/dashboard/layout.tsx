@@ -6,7 +6,6 @@ import { ProfileSetupForm } from "@/components/auth/profile-setup-form";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { signOut } from "firebase/auth";
 import { auth, db, messaging } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
@@ -18,27 +17,25 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 function DashboardAppLayout({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
-  // This state now controls the entire logout flow.
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  const { user, userProfile, loading } = useAuth();
+  const { user, userProfile, loading, logout } = useAuth();
   
   const isProfileSetupComplete = !!userProfile;
 
-  const handleProfileUpdate = () => {
-    // Auth context handles profile updates via onSnapshot.
-  };
-
-  const onProfileUpdateDialog = () => {
+  const onProfileUpdateDialog = async () => {
     if(auth.currentUser && db && userProfile) {
         const newAvatarUrl = localStorage.getItem("avatarUrl") || userProfile.avatarUrl;
         const newStory = localStorage.getItem("userStory") || userProfile.story;
         
-        const userRef = doc(db, 'users', auth.currentUser.uid);
-        updateDoc(userRef, { 
-          avatarUrl: newAvatarUrl,
-          story: newStory,
-        });
+        try {
+            const userRef = doc(db, 'users', auth.currentUser.uid);
+            await updateDoc(userRef, { 
+              avatarUrl: newAvatarUrl,
+              story: newStory,
+            });
+            // The onSnapshot in useAuth will handle the state update automatically
+        } catch (error) {
+            console.error("Failed to update profile:", error);
+        }
     }
   }
 
@@ -58,6 +55,7 @@ function DashboardAppLayout({ children }: { children: React.ReactNode }) {
             getToken(messaging).then(async (currentToken) => {
               if (currentToken) {
                 const userRef = doc(db, 'users', user.uid);
+                // Check against firestore data, not just local state, to be sure
                 if (userProfile && (userProfile as any).fcmToken !== currentToken) {
                   await updateDoc(userRef, { fcmToken: currentToken });
                 }
@@ -66,82 +64,22 @@ function DashboardAppLayout({ children }: { children: React.ReactNode }) {
           }
         });
     }
-
     return () => {
       if (unsubscribeOnMessage) unsubscribeOnMessage();
     };
   }, [toast, user, userProfile]);
 
-  // This is the new, robust logout handler.
-  const handleLogout = () => {
-    // 1. Set the state to true. This will immediately cause the component to
-    //    re-render and display the "Logging out..." screen, unmounting
-    //    all children and their Firestore listeners.
-    setIsLoggingOut(true);
-  };
-
-  // This effect is triggered ONLY when `isLoggingOut` becomes true.
-  useEffect(() => {
-    if (isLoggingOut) {
-      // This function contains the actual logout logic.
-      const performSafeLogout = async () => {
-        try {
-          // 2. We wait for a brief moment. This is NOT a guess. It's a safeguard
-          //    to ensure React has fully completed its unmount cycle and all
-          //    listener cleanup functions have executed. 200ms is a safe value.
-          await new Promise(resolve => setTimeout(resolve, 200));
-
-          // 3. Now that all listeners are detached, we can safely interact with Firestore.
-          if (auth.currentUser && db) {
-            const userDocRef = doc(db, "users", auth.currentUser.uid);
-            await updateDoc(userDocRef, {
-                status: 'offline',
-                fcmToken: ""
-            });
-          }
-          // 4. Finally, sign the user out. The onAuthStateChanged listener in
-          //    AuthProvider will handle the redirect to the login page.
-          await signOut(auth);
-        } catch (error) {
-          console.error("Gagal keluar:", error);
-          // As a last resort, always try to sign out the user if anything above fails.
-          if (auth.currentUser) {
-            signOut(auth).catch(e => console.error("Gagal keluar saat fallback:", e));
-          }
-        }
-      };
-
-      performSafeLogout();
-    }
-    // This effect should only run once when isLoggingOut becomes true.
-  }, [isLoggingOut]);
-
   if (loading) {
     return (
-      <div className="flex flex-1 flex-col gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-        <div className="grid grid-flow-col auto-cols-[minmax(220px,1fr)] gap-4 overflow-x-auto pb-2">
-            {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-32 rounded-lg" />)}
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:gap-8">
-            <Skeleton className="h-96 rounded-lg" />
-            <Skeleton className="h-96 rounded-lg" />
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="text-center space-y-2">
+            <h1 className="text-xl font-semibold">Memuat Sesi...</h1>
+            <p className="text-muted-foreground">Harap tunggu sebentar.</p>
         </div>
       </div>
     );
   }
   
-  // If logging out, show this screen and nothing else. This is the key.
-  if (isLoggingOut) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <div className="text-center space-y-2">
-          <h1 className="text-xl font-semibold">Anda sedang keluar...</h1>
-          <p className="text-muted-foreground">Sesi Anda sedang dibersihkan.</p>
-        </div>
-      </div>
-    );
-  }
-
   if (!isProfileSetupComplete && user) {
      return (
         <>
@@ -166,7 +104,7 @@ function DashboardAppLayout({ children }: { children: React.ReactNode }) {
                   <DialogTitle>Absen dulu ya guys</DialogTitle>
                   <DialogDescription>Sebelum melanjutkan, dimohon untuk berikan nama dan posisi yang sesuai yess.</DialogDescription>
                 </DialogHeader>
-                <ProfileSetupForm onComplete={handleProfileUpdate} />
+                <ProfileSetupForm />
               </DialogContent>
             </Dialog>
         </>
@@ -193,7 +131,7 @@ function DashboardAppLayout({ children }: { children: React.ReactNode }) {
               onProfileUpdate={onProfileUpdateDialog}
               isProfileDialogOpen={isProfileDialogOpen}
               onProfileDialogOpenChange={setProfileDialogOpen}
-              onLogout={handleLogout}
+              onLogout={logout}
             />
         </header>
         <main className="flex-1 pb-16">
